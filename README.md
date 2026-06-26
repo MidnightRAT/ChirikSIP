@@ -2,6 +2,8 @@
 
 A minimal SIP client for KDE Plasma, built with Qt6 and PJSIP.
 
+![Screenshot](resources/Screenshot.png)
+
 ## Features
 
 - SIP registration with digest authentication
