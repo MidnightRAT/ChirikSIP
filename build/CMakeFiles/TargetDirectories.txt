@@ -1,9 +1,0 @@
-/home/chirik/Projects/ChirikSIP/build/CMakeFiles/chiriksip.dir
-/home/chirik/Projects/ChirikSIP/build/CMakeFiles/edit_cache.dir
-/home/chirik/Projects/ChirikSIP/build/CMakeFiles/rebuild_cache.dir
-/home/chirik/Projects/ChirikSIP/build/CMakeFiles/list_install_components.dir
-/home/chirik/Projects/ChirikSIP/build/CMakeFiles/install.dir
-/home/chirik/Projects/ChirikSIP/build/CMakeFiles/install/local.dir
-/home/chirik/Projects/ChirikSIP/build/CMakeFiles/install/strip.dir
-/home/chirik/Projects/ChirikSIP/build/CMakeFiles/chiriksip_autogen_timestamp_deps.dir
-/home/chirik/Projects/ChirikSIP/build/CMakeFiles/chiriksip_autogen.dir
