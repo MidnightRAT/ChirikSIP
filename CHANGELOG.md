@@ -6,7 +6,8 @@
 - Incoming calls with ringtone (440Hz sine wave, 1s on / 3s off)
 - Audio bridge: PortAudio <-> PJSIP conference bridge
 - Phone-style numpad UI (123456789*0#)
-- LCD-style two-line display with scrolling caller name
+- LCD-style two-line display with Segment16A digital font
+- Scrolling caller name (static if fits)
 - Settings in separate dialog (Settings > Settings, Ctrl+,)
 - Settings persistence in `~/.config/chiriksip/chiriksip.conf`
 - Auto-registration on startup
@@ -17,7 +18,6 @@
 - Button "0+": short press = "0", long press = "+"
 - Hangup button: short press = delete last digit / end call, long press = clear all / end call
 - G.711 A-law (PCMA) and u-law (PCMU) codecs only
-- Caller name display: static if fits, scrolling with " *|* " separator if not
 
 ### Bug Fixes
 - Fixed SIP URI construction for phone numbers (auto-append @server)

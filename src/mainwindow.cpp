@@ -34,8 +34,8 @@ MainWindow::MainWindow(QWidget *parent)
     displayLayout->setSpacing(0);
 
     m_numberLabel = new QLabel(displayWidget);
-    m_numberLabel->setAlignment(Qt::AlignRight | Qt::AlignBottom);
-    m_numberLabel->setStyleSheet("color: #e0e0e0; font-size: 28px; font-weight: bold; background: transparent;");
+    m_numberLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    m_numberLabel->setStyleSheet("color: #e0e0e0; font-size: 32px; font-weight: bold; background: transparent; font-family: 'Segment16A';");
     m_numberLabel->setMinimumHeight(40);
     displayLayout->addWidget(m_numberLabel);
 

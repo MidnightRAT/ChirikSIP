@@ -9,6 +9,7 @@ A minimal SIP client for KDE Plasma, built with Qt6 and PJSIP.
 - Incoming calls with ringtone and Answer button
 - Audio bridge via PortAudio (works with PipeWire/PulseAudio)
 - Phone-style numpad UI (123456789*0#)
+- LCD display with Segment16A digital font
 - Caller name display with scrolling text
 - Settings in separate dialog (Ctrl+,)
 - Settings persistence (server, username, password)
