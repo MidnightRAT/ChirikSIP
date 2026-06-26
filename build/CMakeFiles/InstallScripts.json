@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/chirik/Projects/ChirikSIP/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=ChirikSIP
+GenericName=SIP Client
+Comment=A simple SIP client for KDE Plasma
+Exec=chiriksip
+Icon=chiriksip
+Terminal=false
+Categories=Network;Telephony;
+Keywords=sip;voip;call;
