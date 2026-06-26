@@ -2,11 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QLineEdit>
 #include <QPushButton>
 #include <QLabel>
-#include <QGridLayout>
-#include <QGroupBox>
 #include <QTimer>
 
 class SipClient;
@@ -38,13 +35,15 @@ private slots:
     void onScrollTick();
 
     void onAbout();
-    void toggleAccountSettings();
+    void onSettings();
 
 private:
     static QString parseNumber(const QString &uri);
     static QString parseDisplayName(const QString &uri);
 
     void setupMenu();
+    void loadSettings();
+    void saveSettings();
 
     SipClient *m_sipClient;
 
@@ -55,12 +54,6 @@ private:
     QPushButton *m_hangupBtn;
     QLabel *m_statusLabel;
 
-    QLineEdit *m_serverEdit;
-    QLineEdit *m_usernameEdit;
-    QLineEdit *m_passwordEdit;
-    QPushButton *m_registerBtn;
-    QGroupBox *m_accountGroup;
-
     QTimer *m_scrollTimer;
     QTimer *m_longPressTimer;
     QTimer *m_zeroTimer;
@@ -70,6 +63,10 @@ private:
     bool m_inCall = false;
     bool m_incomingWaiting = false;
     bool m_longPressFired = false;
+
+    QString m_server;
+    QString m_username;
+    QString m_password;
 };
 
 #endif // MAINWINDOW_H

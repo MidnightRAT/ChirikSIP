@@ -7,9 +7,10 @@
 - Audio bridge: PortAudio <-> PJSIP conference bridge
 - Phone-style numpad UI (123456789*0#)
 - LCD-style two-line display with scrolling caller name
+- Settings in separate dialog (Settings > Settings, Ctrl+,)
 - Settings persistence in `~/.config/chiriksip/chiriksip.conf`
 - Auto-registration on startup
-- Menu bar: File (Exit), Settings (Account toggle), Help (About)
+- Menu bar: File (Exit), Settings, Help (About)
 - Window icon from project logo
 - .desktop file with hicolor icons (16-256px)
 - Keyboard support: 0-9, *, #, +, Enter, Escape, Backspace
@@ -25,8 +26,8 @@
 - Fixed PortAudio device enumeration (Fedora pjproject missing audio driver)
 - Fixed audio feedback loop (on-demand PortAudio stream)
 - Fixed thread safety for AudioBridge creation
-- Fixed window resize when toggling account settings
 - Fixed Hangup button state after call ends
+- Fixed display text alignment and scrolling
 
 ### Technical
 - Built with Qt6, PJSIP 2.13.1, PortAudio 19.7

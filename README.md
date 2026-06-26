@@ -10,6 +10,7 @@ A minimal SIP client for KDE Plasma, built with Qt6 and PJSIP.
 - Audio bridge via PortAudio (works with PipeWire/PulseAudio)
 - Phone-style numpad UI (123456789*0#)
 - Caller name display with scrolling text
+- Settings in separate dialog (Ctrl+,)
 - Settings persistence (server, username, password)
 - Auto-registration on startup
 - System tray-compatible window icon
@@ -55,20 +56,13 @@ cmake --install build
 ## RPM Build
 
 ```bash
-# Create source RPM
-rpmbuild -bs packaging/chiriksip.spec
-
-# Create binary RPM
-rpmbuild -bb packaging/chiriksip.spec
-
-# Or both at once
 rpmbuild -ba packaging/chiriksip.spec
 ```
 
 ## Usage
 
 1. Launch `chiriksip`
-2. Enter SIP server, username, and password
+2. Open **Settings > Settings** (Ctrl+,) and enter SIP server, username, password
 3. Click **Register** (or it registers automatically if settings are saved)
 4. Dial a number using the numpad and press **Call**
 5. For incoming calls, press **Answer**
@@ -84,6 +78,7 @@ rpmbuild -ba packaging/chiriksip.spec
 | Enter | Make call / Answer |
 | Escape | End call |
 | Backspace | Delete last digit |
+| Ctrl+, | Open Settings |
 
 ## Button Behavior
 

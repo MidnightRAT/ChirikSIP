@@ -1,17 +1,15 @@
 #include "mainwindow.h"
 #include "sipclient.h"
+#include "settingsdialog.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
-#include <QFormLayout>
-#include <QGroupBox>
 #include <QMessageBox>
 #include <QSettings>
 #include <QCloseEvent>
 #include <QMenuBar>
 #include <QMenu>
 #include <QAction>
-#include <QApplication>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -21,30 +19,13 @@ MainWindow::MainWindow(QWidget *parent)
     setMinimumSize(300, 400);
 
     setupMenu();
+    loadSettings();
 
     QWidget *central = new QWidget(this);
     setCentralWidget(central);
     QVBoxLayout *mainLayout = new QVBoxLayout(central);
     mainLayout->setSpacing(4);
     mainLayout->setContentsMargins(8, 8, 8, 8);
-
-    m_accountGroup = new QGroupBox("Account", central);
-    QFormLayout *accLayout = new QFormLayout(m_accountGroup);
-    accLayout->setSpacing(2);
-    m_serverEdit = new QLineEdit(m_accountGroup);
-    m_serverEdit->setPlaceholderText("sip.example.com");
-    accLayout->addRow("Server:", m_serverEdit);
-    m_usernameEdit = new QLineEdit(m_accountGroup);
-    m_usernameEdit->setPlaceholderText("username");
-    accLayout->addRow("User:", m_usernameEdit);
-    m_passwordEdit = new QLineEdit(m_accountGroup);
-    m_passwordEdit->setEchoMode(QLineEdit::Password);
-    m_passwordEdit->setPlaceholderText("password");
-    accLayout->addRow("Pass:", m_passwordEdit);
-    m_registerBtn = new QPushButton("Register", m_accountGroup);
-    accLayout->addRow(m_registerBtn);
-    mainLayout->addWidget(m_accountGroup);
-    m_accountGroup->setVisible(false);
 
     QWidget *displayWidget = new QWidget(central);
     displayWidget->setStyleSheet("background: #1a1a2e; border: 1px solid #444; border-radius: 6px;");
@@ -141,16 +122,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     m_sipClient->init();
 
-    QSettings settings;
-    m_serverEdit->setText(settings.value("server").toString());
-    m_usernameEdit->setText(settings.value("username").toString());
-    m_passwordEdit->setText(settings.value("password").toString());
-
-    if (!m_serverEdit->text().isEmpty() && !m_usernameEdit->text().isEmpty()) {
+    if (!m_server.isEmpty() && !m_username.isEmpty()) {
         QTimer::singleShot(100, this, &MainWindow::onRegisterClicked);
     }
 
-    connect(m_registerBtn, &QPushButton::clicked, this, &MainWindow::onRegisterClicked);
     connect(m_callBtn, &QPushButton::clicked, this, &MainWindow::onCallClicked);
     connect(m_sipClient, &SipClient::registrationStatus, this, &MainWindow::onRegistrationStatus);
     connect(m_sipClient, &SipClient::callStateChanged, this, &MainWindow::onCallStateChanged);
@@ -161,12 +136,25 @@ MainWindow::~MainWindow()
 {
 }
 
-void MainWindow::closeEvent(QCloseEvent *event)
+void MainWindow::loadSettings()
 {
     QSettings settings;
-    settings.setValue("server", m_serverEdit->text().trimmed());
-    settings.setValue("username", m_usernameEdit->text().trimmed());
-    settings.setValue("password", m_passwordEdit->text());
+    m_server = settings.value("server").toString();
+    m_username = settings.value("username").toString();
+    m_password = settings.value("password").toString();
+}
+
+void MainWindow::saveSettings()
+{
+    QSettings settings;
+    settings.setValue("server", m_server);
+    settings.setValue("username", m_username);
+    settings.setValue("password", m_password);
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    saveSettings();
     QMainWindow::closeEvent(event);
 }
 
@@ -215,9 +203,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
     QString text = event->text();
     if (!text.isEmpty() && text[0].isPrint()) {
-        QString current = m_numberLabel->text();
-        current += text;
-        m_numberLabel->setText(current);
+        m_numberLabel->setText(m_numberLabel->text() + text);
         event->accept();
         return;
     }
@@ -274,36 +260,29 @@ void MainWindow::onNumpadClicked()
     QPushButton *btn = qobject_cast<QPushButton *>(sender());
     if (!btn || m_inCall)
         return;
-
     m_numberLabel->setText(m_numberLabel->text() + btn->text());
 }
 
 void MainWindow::onZeroPressed()
 {
-    if (m_inCall)
-        return;
-
+    if (m_inCall) return;
     m_numberLabel->setText(m_numberLabel->text() + "0");
     m_zeroTimer->start();
 }
 
 void MainWindow::onZeroReleased()
 {
-    if (m_zeroTimer->isActive()) {
+    if (m_zeroTimer->isActive())
         m_zeroTimer->stop();
-    }
 }
 
 void MainWindow::onZeroLongPress()
 {
-    if (m_inCall)
-        return;
-
+    if (m_inCall) return;
     QString current = m_numberLabel->text();
     if (!current.isEmpty() && current.right(1) == "0") {
         current.chop(1);
-        current += "+";
-        m_numberLabel->setText(current);
+        m_numberLabel->setText(current + "+");
     }
 }
 
@@ -317,7 +296,6 @@ void MainWindow::onHangupReleased()
 {
     if (m_longPressTimer->isActive()) {
         m_longPressTimer->stop();
-
         if (m_inCall) {
             m_sipClient->hangup();
             m_scrollTimer->stop();
@@ -334,7 +312,6 @@ void MainWindow::onHangupReleased()
 void MainWindow::onHangupLongPress()
 {
     m_longPressFired = true;
-
     if (m_inCall) {
         m_sipClient->hangup();
         m_scrollTimer->stop();
@@ -373,31 +350,18 @@ void MainWindow::onCallClicked()
 
 void MainWindow::onRegisterClicked()
 {
-    QString server = m_serverEdit->text().trimmed();
-    QString username = m_usernameEdit->text().trimmed();
-    QString password = m_passwordEdit->text();
-
-    if (server.isEmpty() || username.isEmpty()) {
-        QMessageBox::warning(this, "Error", "Server and username are required");
+    if (m_server.isEmpty() || m_username.isEmpty()) {
+        onSettings();
         return;
     }
 
-    m_registerBtn->setEnabled(false);
     m_statusLabel->setText("Registering...");
     m_statusLabel->setStyleSheet("color: #FF9800; padding: 4px; font-size: 11px;");
-
-    QSettings settings;
-    settings.setValue("server", server);
-    settings.setValue("username", username);
-    settings.setValue("password", password);
-
-    m_sipClient->registerAccount(server, username, password);
+    m_sipClient->registerAccount(m_server, m_username, m_password);
 }
 
 void MainWindow::onRegistrationStatus(bool ok, const QString &message)
 {
-    m_registerBtn->setEnabled(true);
-
     if (ok) {
         m_statusLabel->setText("Registered");
         m_statusLabel->setStyleSheet("color: #4CAF50; padding: 4px; font-size: 11px;");
@@ -471,25 +435,28 @@ void MainWindow::setupMenu()
     connect(exitAction, &QAction::triggered, this, &QWidget::close);
 
     QMenu *settingsMenu = menu->addMenu("&Settings");
-    QAction *toggleAccount = settingsMenu->addAction("&Account");
-    toggleAccount->setCheckable(true);
-    toggleAccount->setChecked(false);
-    connect(toggleAccount, &QAction::triggered, this, &MainWindow::toggleAccountSettings);
+    QAction *settingsAction = settingsMenu->addAction("&Settings");
+    settingsAction->setShortcut(QKeySequence("Ctrl+,"));
+    connect(settingsAction, &QAction::triggered, this, &MainWindow::onSettings);
 
     QMenu *helpMenu = menu->addMenu("&Help");
     QAction *aboutAction = helpMenu->addAction("&About ChirikSIP");
     connect(aboutAction, &QAction::triggered, this, &MainWindow::onAbout);
 }
 
-void MainWindow::toggleAccountSettings()
+void MainWindow::onSettings()
 {
-    bool show = !m_accountGroup->isVisible();
-    m_accountGroup->setVisible(show);
-    centralWidget()->setMinimumHeight(0);
-    layout()->activate();
-    centralWidget()->adjustSize();
-    resize(centralWidget()->sizeHint().width(),
-           centralWidget()->sizeHint().height() + menuBar()->height());
+    SettingsDialog dlg(this);
+    dlg.setServer(m_server);
+    dlg.setUsername(m_username);
+    dlg.setPassword(m_password);
+
+    if (dlg.exec() == QDialog::Accepted) {
+        m_server = dlg.server();
+        m_username = dlg.username();
+        m_password = dlg.password();
+        saveSettings();
+    }
 }
 
 void MainWindow::onAbout()
