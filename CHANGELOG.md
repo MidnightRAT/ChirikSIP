@@ -15,15 +15,18 @@
 - Tray icon with right-click menu (Restore, Exit)
 - Incoming call popup notification when minimized to tray
 - Hangup button rejects incoming calls
-- Settings persistence in `~/.config/chiriksip/chiriksip.conf`
+- Settings persistence in `%APPDATA%/chiriksip/chiriksip.ini` (Windows) or `~/.config/chiriksip/chiriksip.conf` (Linux)
 - Auto-registration on startup
 - Menu bar: File (Exit), Settings, Help (About)
-- Window icon from project logo
-- .desktop file with hicolor icons (16-256px)
+- Embedded icon via Qt resources (.qrc)
+- .desktop file with hicolor icons (16-256px) on Linux
 - Keyboard support: 0-9, *, #, +, Enter, Escape, Backspace
 - Button "0+": short press = "0", long press = "+"
 - Hangup button: short press = delete last digit / end call, long press = clear all / end call
 - G.711 A-law (PCMA) and u-law (PCMU) codecs only
+- Windows cross-compilation: MinGW32 and MinGW64 builds
+- Windows executable: GUI app (no console window)
+- Windows .ico icon embedded in .exe
 
 ### Bug Fixes
 - Fixed SIP URI construction for phone numbers (auto-append @server)

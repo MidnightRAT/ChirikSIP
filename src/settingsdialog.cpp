@@ -2,12 +2,14 @@
 #include <QFormLayout>
 #include <QVBoxLayout>
 #include <QDialogButtonBox>
+#include <QApplication>
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent)
 {
     setWindowTitle("Settings");
     setMinimumWidth(300);
+    setWindowIcon(QApplication::windowIcon());
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
 

@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="icons/chiriksip.png">resources/icons/chiriksip.png</file>
+        <file alias="icons/chiriksip.ico">windows/chiriksip.ico</file>
+    </qresource>
+</RCC>

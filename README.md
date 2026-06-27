@@ -1,8 +1,8 @@
 # ChirikSIP
 
-A minimal SIP client for KDE Plasma, built with Qt6 and PJSIP.
+A minimal SIP client for KDE Plasma and Windows, built with Qt6 and PJSIP.
 
- ![Screenshot](resources/Screenshot_main.png)  ![Screenshot](resources/Screenshot_notification.png) 
+![Screenshot](resources/Screenshot.png)
 
 ## Features
 
@@ -18,11 +18,11 @@ A minimal SIP client for KDE Plasma, built with Qt6 and PJSIP.
 - Auto re-registration when settings change
 - System tray: minimize to tray, only Ctrl+Q exits
 - Incoming call popup when minimized
-- Settings persistence (server, username, password)
+- Settings persistence (Windows: %APPDATA%/chiriksip/, Linux: ~/.config/chiriksip/)
 - Auto-registration on startup
-- System tray-compatible window icon
 - Keyboard support: 0-9, *, #, +, Enter, Escape, Backspace
 - G.711 A-law (PCMA) and G.711 u-law (PCMU) codecs only
+- Windows cross-compilation support (MinGW32/64)
 
 ## Build Dependencies
 

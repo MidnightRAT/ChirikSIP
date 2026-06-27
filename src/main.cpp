@@ -7,15 +7,20 @@
 
 static QIcon findAppIcon()
 {
+    QIcon icon(":/icons/chiriksip.png");
+    if (!icon.isNull()) return icon;
+
 #ifdef Q_OS_WIN
     QString appDir = QCoreApplication::applicationDirPath();
-    QIcon icon(appDir + "/chiriksip.ico");
+    icon = QIcon(appDir + "/chiriksip.ico");
+    if (!icon.isNull()) return icon;
+    icon = QIcon(appDir + "/chiriksip.png");
     if (!icon.isNull()) return icon;
     icon = QIcon(appDir + "/resources/icons/chiriksip.png");
     if (!icon.isNull()) return icon;
 #endif
 
-    QIcon icon("/usr/share/icons/hicolor/256x256/apps/chiriksip.png");
+    icon = QIcon("/usr/share/icons/hicolor/256x256/apps/chiriksip.png");
     if (!icon.isNull()) return icon;
 
     return QIcon("resources/icons/chiriksip.png");
@@ -27,6 +32,7 @@ int main(int argc, char *argv[])
     app.setOrganizationName("chiriksip");
     app.setApplicationName("chiriksip");
     app.setApplicationVersion("1.0.0");
+    QSettings::setDefaultFormat(QSettings::IniFormat);
 
     app.setWindowIcon(findAppIcon());
 
