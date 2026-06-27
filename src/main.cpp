@@ -3,6 +3,23 @@
 #include <QApplication>
 #include <QIcon>
 #include <QSettings>
+#include <QStandardPaths>
+
+static QIcon findAppIcon()
+{
+#ifdef Q_OS_WIN
+    QString appDir = QCoreApplication::applicationDirPath();
+    QIcon icon(appDir + "/chiriksip.ico");
+    if (!icon.isNull()) return icon;
+    icon = QIcon(appDir + "/resources/icons/chiriksip.png");
+    if (!icon.isNull()) return icon;
+#endif
+
+    QIcon icon("/usr/share/icons/hicolor/256x256/apps/chiriksip.png");
+    if (!icon.isNull()) return icon;
+
+    return QIcon("resources/icons/chiriksip.png");
+}
 
 int main(int argc, char *argv[])
 {
@@ -11,10 +28,7 @@ int main(int argc, char *argv[])
     app.setApplicationName("chiriksip");
     app.setApplicationVersion("1.0.0");
 
-    QIcon icon("/usr/share/icons/hicolor/256x256/apps/chiriksip.png");
-    if (icon.isNull())
-        icon = QIcon("resources/icons/chiriksip.png");
-    app.setWindowIcon(icon);
+    app.setWindowIcon(findAppIcon());
 
     if (SetupWizard::isFirstRun()) {
         SetupWizard wizard;

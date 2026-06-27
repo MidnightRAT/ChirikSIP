@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include "ringtone.h"
 #include <cmath>
 #include <cstring>
