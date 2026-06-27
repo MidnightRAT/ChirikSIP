@@ -3,3 +3,6 @@ build/
 *.d
 *.rpm
 build-win64/
+
+build-win32/
+build-win64/
