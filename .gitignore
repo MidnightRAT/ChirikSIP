@@ -2,3 +2,4 @@ build/
 *.o
 *.d
 *.rpm
+build-win64/

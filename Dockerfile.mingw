@@ -1,74 +1,42 @@
 FROM fedora:44
 
 RUN dnf install -y \
-    cmake gcc-c++ make pkg-config \
+    cmake gcc-c++ make pkg-config ninja-build \
     mingw32-gcc-c++ mingw64-gcc-c++ \
     mingw32-winpthreads-static mingw64-winpthreads-static \
-    mingw32-libwinpthread mingw64-libwinpthread \
-    git curl tar xz patch \
-    qt6-qtbase-devel \
+    git curl tar xz patch perl python3 \
     && dnf clean all
 
 WORKDIR /build
 
-# Build PortAudio for mingw32
+# Build PortAudio for mingw32 and mingw64
 RUN git clone --depth 1 --branch v19.7.0 https://github.com/PortAudio/portaudio.git && \
     cd portaudio && \
-    mkdir build32 && cd build32 && \
-    cmake .. -DCMAKE_TOOLCHAIN_FILE=/opt/toolchains/mingw32.cmake \
-             -DCMAKE_INSTALL_PREFIX=/opt/mingw32 \
-             -DPA_BUILD_SHARED_LIBS=OFF \
-             -DPA_BUILD_STATIC_LIBS=ON \
-             -DPA_USE_WDMKS=OFF \
-             -DPA_USE_WMME=ON \
-             -DPA_USE_WASAPI=ON \
-             -DPA_USE_DSOUND=ON \
-    && make -j$(nproc) && make install && cd ../.. && \
-    mkdir build64 && cd build64 && \
-    cmake .. -DCMAKE_TOOLCHAIN_FILE=/opt/toolchains/mingw64.cmake \
-             -DCMAKE_INSTALL_PREFIX=/opt/mingw64 \
-             -DPA_BUILD_SHARED_LIBS=OFF \
-             -DPA_BUILD_STATIC_LIBS=ON \
-             -DPA_USE_WDMKS=OFF \
-             -DPA_USE_WMME=ON \
-             -DPA_USE_WASAPI=ON \
-             -DPA_USE_DSOUND=ON \
-    && make -j$(nproc) && make install && cd ../.. && \
-    rm -rf portaudio
+    for arch in mingw32 mingw64; do \
+        host=$([ "$arch" = "mingw32" ] && echo "i686-w64-mingw32" || echo "x86_64-w64-mingw32"); \
+        mkdir -p build-$arch && cd build-$arch && \
+        cmake .. -DCMAKE_SYSTEM_NAME=Windows \
+                 -DCMAKE_C_COMPILER=${host}-gcc \
+                 -DCMAKE_CXX_COMPILER=${host}-g++ \
+                 -DCMAKE_INSTALL_PREFIX=/opt/$arch \
+                 -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+                 -DPA_USE_WMME=ON -DPA_USE_WASAPI=ON -DPA_USE_DSOUND=ON \
+        && make -j$(nproc) && make install && cd ..; \
+    done && rm -rf /build/portaudio
 
-# Build PJSIP for mingw32
+# Build PJSIP for mingw32 and mingw64
 RUN git clone --depth 1 --branch 2.13.1 https://github.com/pjsip/pjproject.git && \
     cd pjproject && \
-    mkdir build32 && cd build32 && \
-    cmake .. -DCMAKE_TOOLCHAIN_FILE=/opt/toolchains/mingw32.cmake \
-             -DCMAKE_INSTALL_PREFIX=/opt/mingw32 \
-             -DCMAKE_PREFIX_PATH=/opt/mingw32 \
-             -DPJMEDIAAUDIOBACKEND=0 \
-             -DPA_USE_WASAPI=1 \
-    && make -j$(nproc) && make install && cd ../.. && \
-    mkdir build64 && cd build64 && \
-    cmake .. -DCMAKE_TOOLCHAIN_FILE=/opt/toolchains/mingw64.cmake \
-             -DCMAKE_INSTALL_PREFIX=/opt/mingw64 \
-             -DCMAKE_PREFIX_PATH=/opt/mingw64 \
-             -DPJMEDIAAUDIOBACKEND=0 \
-             -DPA_USE_WASAPI=1 \
-    && make -j$(nproc) && make install && cd ../.. && \
-    rm -rf pjproject
-
-# Build Qt6 for mingw32
-RUN git clone --depth 1 --branch v6.7.3 https://code.qt.io/qt/qt5.git qt5 && \
-    cd qt5 && \
-    perl init-repository --module-subset=qtbase && \
-    cd qtbase && \
-    mkdir build32 && cd build32 && \
-    ../../configure -xplatform win32-g++ \
-        -device-option CROSS_COMPILE=i686-w64-mingw32- \
-        -prefix /opt/mingw32/qt6 \
-        -opensource -confirm-license -nomake examples -nomake tests \
-        -no-opengl -no-openssl -no-dbus \
-        -skip qtwebengine -skip qtdeclarative -skip qtmultimedia \
-    && make -j$(nproc) && make install && cd ../.. && \
-    rm -rf qt5
+    for arch in mingw32 mingw64; do \
+        host=$([ "$arch" = "mingw32" ] && echo "i686-w64-mingw32" || echo "x86_64-w64-mingw32"); \
+        make distclean 2>/dev/null; \
+        ./configure --host=$host --prefix=/opt/$arch \
+            --disable-video --disable-silk --disable-opencore-amr \
+            --disable-opencore-amrwb --disable-libyuv --disable-libwebrtc \
+            --with-external-pa \
+            CFLAGS="-I/opt/$arch/include" LDFLAGS="-L/opt/$arch/lib" \
+        && make dep -j$(nproc) && make -j$(nproc) && make install; \
+    done && rm -rf /build/pjproject
 
 WORKDIR /src
 ENTRYPOINT ["/bin/bash"]
