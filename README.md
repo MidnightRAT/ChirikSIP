@@ -2,9 +2,23 @@
 
 A minimal SIP client for KDE Plasma and Windows, built with Qt6 and PJSIP.
 
-![Main Window](resources/Screenshot_main.png)
+## Screenshots
 
-![Incoming Call Notification](resources/Screenshot_notification.png)
+### Linux
+
+![Linux Main Window](screenshots/Linux_dark_main.png)
+
+![Linux Incoming Call](screenshots/Linux_dark_notification.png)
+
+### Windows (Wine)
+
+![Windows Main Window](screenshots/Wine_main.png)
+
+![Windows Settings](screenshots/Wine_settings.png)
+
+![Windows Setup Wizard](screenshots/Wine_wizard_1.png)
+![Windows Setup Wizard](screenshots/Wine_wizard_2.png)
+![Windows Setup Wizard](screenshots/Wine_wizard_3.png)
 
 ## Features
 
