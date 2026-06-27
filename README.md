@@ -2,7 +2,7 @@
 
 A minimal SIP client for KDE Plasma, built with Qt6 and PJSIP.
 
-![Screenshot](resources/Screenshot_main.png) ![Screenshot](resources/Screenshot_notification.png)
+ ![Screenshot](resources/Screenshot_main.png)  ![Screenshot](resources/Screenshot_notification.png) 
 
 ## Features
 
