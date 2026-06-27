@@ -2,7 +2,9 @@
 
 A minimal SIP client for KDE Plasma and Windows, built with Qt6 and PJSIP.
 
-![Screenshot](resources/Screenshot.png)
+![Main Window](resources/Screenshot_main.png)
+
+![Incoming Call Notification](resources/Screenshot_notification.png)
 
 ## Features
 
