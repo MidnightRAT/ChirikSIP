@@ -11,6 +11,10 @@
 - Setup wizard on first launch
 - Settings in separate dialog (Settings > Settings, Ctrl+,)
 - Auto re-registration when settings change (server/user/password)
+- System tray: minimize to tray on close (X/Alt+F4), only Ctrl+Q exits
+- Tray icon with right-click menu (Restore, Exit)
+- Incoming call popup notification when minimized to tray
+- Hangup button rejects incoming calls
 - Settings persistence in `~/.config/chiriksip/chiriksip.conf`
 - Auto-registration on startup
 - Menu bar: File (Exit), Settings, Help (About)

@@ -2,7 +2,7 @@
 
 A minimal SIP client for KDE Plasma, built with Qt6 and PJSIP.
 
-![Screenshot](resources/Screenshot.png)
+![Screenshot](resources/Screenshot_main.png) ![Screenshot](resources/Screenshot_notification.png)
 
 ## Features
 
@@ -16,6 +16,8 @@ A minimal SIP client for KDE Plasma, built with Qt6 and PJSIP.
 - Setup wizard on first launch
 - Settings in separate dialog (Ctrl+,)
 - Auto re-registration when settings change
+- System tray: minimize to tray, only Ctrl+Q exits
+- Incoming call popup when minimized
 - Settings persistence (server, username, password)
 - Auto-registration on startup
 - System tray-compatible window icon

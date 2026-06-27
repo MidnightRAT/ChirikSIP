@@ -5,8 +5,10 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QTimer>
+#include <QSystemTrayIcon>
 
 class SipClient;
+class CallNotification;
 
 class MainWindow : public QMainWindow
 {
@@ -36,16 +38,23 @@ private slots:
 
     void onAbout();
     void onSettings();
+    void onTrayActivated(QSystemTrayIcon::ActivationReason reason);
+    void onTrayRestore();
+    void onTrayExit();
 
 private:
     static QString parseNumber(const QString &uri);
     static QString parseDisplayName(const QString &uri);
 
     void setupMenu();
+    void setupTray();
     void loadSettings();
     void saveSettings();
 
     SipClient *m_sipClient;
+
+    QSystemTrayIcon *m_trayIcon;
+    bool m_forceQuit = false;
 
     QLabel *m_numberLabel;
     QLabel *m_nameLabel;
@@ -67,6 +76,8 @@ private:
     QString m_server;
     QString m_username;
     QString m_password;
+
+    CallNotification *m_callNotification = nullptr;
 };
 
 #endif // MAINWINDOW_H

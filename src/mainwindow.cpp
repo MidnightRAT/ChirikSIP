@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "sipclient.h"
 #include "settingsdialog.h"
+#include "callnotification.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -10,6 +11,8 @@
 #include <QMenuBar>
 #include <QMenu>
 #include <QAction>
+#include <QSystemTrayIcon>
+#include <QApplication>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -19,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
     setMinimumSize(300, 400);
 
     setupMenu();
+    setupTray();
     loadSettings();
 
     QWidget *central = new QWidget(this);
@@ -154,8 +158,14 @@ void MainWindow::saveSettings()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    if (!m_forceQuit) {
+        event->ignore();
+        hide();
+        m_trayIcon->show();
+        return;
+    }
     saveSettings();
-    QMainWindow::closeEvent(event);
+    QApplication::quit();
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
@@ -166,6 +176,14 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     }
 
     int key = event->key();
+    Qt::KeyboardModifiers mod = event->modifiers();
+
+    if (key == Qt::Key_Q && (mod & Qt::ControlModifier)) {
+        m_forceQuit = true;
+        close();
+        event->accept();
+        return;
+    }
 
     if (key == Qt::Key_Return || key == Qt::Key_Enter) {
         onCallClicked();
@@ -296,10 +314,12 @@ void MainWindow::onHangupReleased()
 {
     if (m_longPressTimer->isActive()) {
         m_longPressTimer->stop();
-        if (m_inCall) {
+        if (m_inCall || m_incomingWaiting) {
             m_sipClient->hangup();
             m_scrollTimer->stop();
-        } else if (!m_incomingWaiting) {
+            if (m_callNotification)
+                m_callNotification->hideNotification();
+        } else {
             QString current = m_numberLabel->text();
             if (!current.isEmpty()) {
                 current.chop(1);
@@ -312,10 +332,12 @@ void MainWindow::onHangupReleased()
 void MainWindow::onHangupLongPress()
 {
     m_longPressFired = true;
-    if (m_inCall) {
+    if (m_inCall || m_incomingWaiting) {
         m_sipClient->hangup();
         m_scrollTimer->stop();
-    } else if (!m_incomingWaiting) {
+        if (m_callNotification)
+            m_callNotification->hideNotification();
+    } else {
         m_numberLabel->setText("");
     }
 }
@@ -380,6 +402,8 @@ void MainWindow::onCallStateChanged(int callId, const QString &state)
     if (state == "CONFIRMED") {
         m_statusLabel->setText("Call active");
         m_statusLabel->setStyleSheet("color: #4CAF50; padding: 4px; font-size: 11px; font-weight: bold;");
+        if (m_callNotification)
+            m_callNotification->hideNotification();
     } else if (state == "DISCONNCTD") {
         m_inCall = false;
         m_incomingWaiting = false;
@@ -391,6 +415,8 @@ void MainWindow::onCallStateChanged(int callId, const QString &state)
         m_nameLabel->setText("");
         m_statusLabel->setText("Call ended");
         m_statusLabel->setStyleSheet("color: gray; padding: 4px; font-size: 11px;");
+        if (m_callNotification)
+            m_callNotification->hideNotification();
     } else if (state == "CALLING" || state == "EARLY" || state == "CONNECTING") {
         m_statusLabel->setText("Connecting...");
         m_statusLabel->setStyleSheet("color: #2196F3; padding: 4px; font-size: 11px;");
@@ -402,9 +428,11 @@ void MainWindow::onIncomingCall(int callId, const QString &remoteUri)
     Q_UNUSED(callId);
 
     m_incomingWaiting = true;
-    m_numberLabel->setText(parseNumber(remoteUri));
-
+    QString number = parseNumber(remoteUri);
     QString name = parseDisplayName(remoteUri);
+
+    m_numberLabel->setText(number);
+
     if (!name.isEmpty()) {
         m_scrollText = name;
         m_scrollOffset = 0;
@@ -423,6 +451,75 @@ void MainWindow::onIncomingCall(int callId, const QString &remoteUri)
     m_hangupBtn->setEnabled(true);
     m_statusLabel->setText("Incoming call");
     m_statusLabel->setStyleSheet("color: #FF9800; padding: 4px; font-size: 11px; font-weight: bold;");
+
+    if (!isVisible()) {
+        if (!m_callNotification)
+            m_callNotification = new CallNotification(m_sipClient, this);
+
+        connect(m_callNotification, &CallNotification::accepted, this, [this]() {
+            m_inCall = true;
+            m_incomingWaiting = false;
+            m_callBtn->setEnabled(false);
+            m_hangupBtn->setEnabled(true);
+            m_scrollTimer->stop();
+            m_statusLabel->setText("Call active");
+            m_statusLabel->setStyleSheet("color: #4CAF50; padding: 4px; font-size: 11px; font-weight: bold;");
+        }, Qt::UniqueConnection);
+
+        connect(m_callNotification, &CallNotification::rejected, this, [this]() {
+            m_incomingWaiting = false;
+            m_scrollTimer->stop();
+            m_numberLabel->setText("");
+            m_nameLabel->setText("");
+            m_statusLabel->setText("Call rejected");
+            m_statusLabel->setStyleSheet("color: gray; padding: 4px; font-size: 11px;");
+        }, Qt::UniqueConnection);
+
+        m_callNotification->showNotification(number, name);
+    }
+}
+
+void MainWindow::setupTray()
+{
+    QMenu *trayMenu = new QMenu(this);
+
+    QAction *restoreAction = trayMenu->addAction("Restore");
+    connect(restoreAction, &QAction::triggered, this, &MainWindow::onTrayRestore);
+
+    QAction *exitAction = trayMenu->addAction("Exit");
+    connect(exitAction, &QAction::triggered, this, &MainWindow::onTrayExit);
+
+    m_trayIcon = new QSystemTrayIcon(this);
+    m_trayIcon->setContextMenu(trayMenu);
+    m_trayIcon->setToolTip("ChirikSIP");
+
+    QIcon icon("/usr/share/icons/hicolor/256x256/apps/chiriksip.png");
+    if (icon.isNull())
+        icon = QIcon("resources/icons/chiriksip.png");
+    m_trayIcon->setIcon(icon);
+
+    connect(m_trayIcon, &QSystemTrayIcon::activated, this, &MainWindow::onTrayActivated);
+}
+
+void MainWindow::onTrayActivated(QSystemTrayIcon::ActivationReason reason)
+{
+    if (reason == QSystemTrayIcon::DoubleClick || reason == QSystemTrayIcon::Trigger) {
+        onTrayRestore();
+    }
+}
+
+void MainWindow::onTrayRestore()
+{
+    show();
+    raise();
+    activateWindow();
+    m_trayIcon->hide();
+}
+
+void MainWindow::onTrayExit()
+{
+    m_forceQuit = true;
+    close();
 }
 
 void MainWindow::setupMenu()
@@ -432,7 +529,7 @@ void MainWindow::setupMenu()
     QMenu *fileMenu = menu->addMenu("&File");
     QAction *exitAction = fileMenu->addAction("E&xit");
     exitAction->setShortcut(QKeySequence::Quit);
-    connect(exitAction, &QAction::triggered, this, &QWidget::close);
+    connect(exitAction, &QAction::triggered, this, [this]() { m_forceQuit = true; close(); });
 
     QMenu *settingsMenu = menu->addMenu("&Settings");
     QAction *settingsAction = settingsMenu->addAction("&Settings");

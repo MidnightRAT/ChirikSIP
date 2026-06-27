@@ -12,6 +12,7 @@ pkg_check_modules(PJSIP REQUIRED IMPORTED_TARGET libpjproject)
 add_executable(chiriksip
     src/main.cpp
     src/mainwindow.cpp
+    src/callnotification.cpp
     src/settingsdialog.cpp
     src/setupwizard.cpp
     src/sipclient.cpp
