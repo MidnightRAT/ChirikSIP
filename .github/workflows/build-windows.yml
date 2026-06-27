@@ -1,0 +1,85 @@
+name: Build Windows
+
+on:
+  push:
+    branches: [ mingw ]
+  pull_request:
+    branches: [ mingw ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - msystem: MINGW64
+            arch: x86_64
+          - msystem: MINGW32
+            arch: i686
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          update: true
+          install: >-
+            mingw-w64-${{ matrix.arch }}-gcc
+            mingw-w64-${{ matrix.arch }}-cmake
+            mingw-w64-${{ matrix.arch }}-ninja
+            mingw-w64-${{ matrix.arch }}-qt6-base
+            mingw-w64-${{ matrix.arch }}-portaudio
+            mingw-w64-${{ matrix.arch }}-make
+
+      - name: Build PJSIP
+        run: |
+          git clone --depth 1 --branch 2.13.1 https://github.com/pjsip/pjproject.git
+          cd pjproject
+          mkdir build && cd build
+          cmake .. -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=$MINGW_PREFIX \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DPJMEDIAAUDIOBACKEND=0 \
+            -DPA_USE_WASAPI=1 \
+            -DPA_USE_WMME=1 \
+            -DPA_USE_DSOUND=1
+          ninja
+          ninja install
+
+      - name: Build ChirikSIP
+        run: |
+          mkdir build && cd build
+          cmake .. -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=$MINGW_PREFIX \
+            -DCMAKE_PREFIX_PATH=$MINGW_PREFIX \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+          ninja
+
+      - name: Package
+        run: |
+          cd build
+          mkdir -p dist
+          cp chiriksip.exe dist/
+          cp $MINGW_PREFIX/bin/libpjsua*.dll dist/ 2>/dev/null || true
+          cp $MINGW_PREFIX/bin/libpjsip*.dll dist/ 2>/dev/null || true
+          cp $MINGW_PREFIX/bin/libpj*.dll dist/ 2>/dev/null || true
+          cp $MINGW_PREFIX/bin/libportaudio*.dll dist/ 2>/dev/null || true
+          cp $MINGW_PREFIX/bin/Qt6Core.dll dist/ 2>/dev/null || true
+          cp $MINGW_PREFIX/bin/Qt6Gui.dll dist/ 2>/dev/null || true
+          cp $MINGW_PREFIX/bin/Qt6Widgets.dll dist/ 2>/dev/null || true
+          cp $MINGW_PREFIX/bin/libgcc_*.dll dist/ 2>/dev/null || true
+          cp $MINGW_PREFIX/bin/libstdc++.dll dist/ 2>/dev/null || true
+          cp $MINGW_PREFIX/bin/libwinpthread-1.dll dist/ 2>/dev/null || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: chiriksip-windows-${{ matrix.arch }}
+          path: build/dist/
