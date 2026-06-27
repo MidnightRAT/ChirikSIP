@@ -13,7 +13,9 @@ A minimal SIP client for KDE Plasma, built with Qt6 and PJSIP.
 - Phone-style numpad UI (123456789*0#)
 - LCD display with Segment16A digital font
 - Caller name display with scrolling text
+- Setup wizard on first launch
 - Settings in separate dialog (Ctrl+,)
+- Auto re-registration when settings change
 - Settings persistence (server, username, password)
 - Auto-registration on startup
 - System tray-compatible window icon

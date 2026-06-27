@@ -8,7 +8,9 @@
 - Phone-style numpad UI (123456789*0#)
 - LCD-style two-line display with Segment16A digital font
 - Scrolling caller name (static if fits)
+- Setup wizard on first launch
 - Settings in separate dialog (Settings > Settings, Ctrl+,)
+- Auto re-registration when settings change (server/user/password)
 - Settings persistence in `~/.config/chiriksip/chiriksip.conf`
 - Auto-registration on startup
 - Menu bar: File (Exit), Settings, Help (About)

@@ -1,6 +1,6 @@
 Name:           chiriksip
 Version:        1.0.0
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        A simple SIP client for KDE Plasma
 License:        MIT
 URL:            https://github.com/chirik/ChirikSIP

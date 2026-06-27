@@ -13,6 +13,7 @@ add_executable(chiriksip
     src/main.cpp
     src/mainwindow.cpp
     src/settingsdialog.cpp
+    src/setupwizard.cpp
     src/sipclient.cpp
     src/audiobridge.cpp
     src/ringtone.cpp

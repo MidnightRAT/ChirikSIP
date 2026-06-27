@@ -452,10 +452,22 @@ void MainWindow::onSettings()
     dlg.setPassword(m_password);
 
     if (dlg.exec() == QDialog::Accepted) {
-        m_server = dlg.server();
-        m_username = dlg.username();
-        m_password = dlg.password();
+        QString newServer = dlg.server();
+        QString newUser = dlg.username();
+        QString newPass = dlg.password();
+
+        bool changed = (newServer != m_server || newUser != m_username || newPass != m_password);
+
+        m_server = newServer;
+        m_username = newUser;
+        m_password = newPass;
         saveSettings();
+
+        if (changed && !m_server.isEmpty() && !m_username.isEmpty()) {
+            m_statusLabel->setText("Re-registering...");
+            m_statusLabel->setStyleSheet("color: #FF9800; padding: 4px; font-size: 11px;");
+            m_sipClient->registerAccount(m_server, m_username, m_password);
+        }
     }
 }
 

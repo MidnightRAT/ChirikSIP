@@ -1,6 +1,8 @@
 #include "mainwindow.h"
+#include "setupwizard.h"
 #include <QApplication>
 #include <QIcon>
+#include <QSettings>
 
 int main(int argc, char *argv[])
 {
@@ -13,6 +15,17 @@ int main(int argc, char *argv[])
     if (icon.isNull())
         icon = QIcon("resources/icons/chiriksip.png");
     app.setWindowIcon(icon);
+
+    if (SetupWizard::isFirstRun()) {
+        SetupWizard wizard;
+        if (wizard.exec() != QDialog::Accepted)
+            return 0;
+
+        QSettings settings;
+        settings.setValue("server", wizard.server());
+        settings.setValue("username", wizard.username());
+        settings.setValue("password", wizard.password());
+    }
 
     MainWindow window;
     window.show();
