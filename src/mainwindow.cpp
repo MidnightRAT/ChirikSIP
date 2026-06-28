@@ -180,7 +180,7 @@ void MainWindow::saveSettings()
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     saveSettings();
-    if (!m_forceQuit) {
+    if (!m_forceQuit && m_trayIcon) {
         event->ignore();
         m_trayIcon->show();
         hide();
@@ -231,6 +231,10 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     }
 
     if (key == Qt::Key_Backspace) {
+        if (m_inCall) {
+            event->ignore();
+            return;
+        }
         QString current = m_numberLabel->text();
         if (!current.isEmpty()) {
             current.chop(1);
@@ -242,6 +246,10 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
     QString text = event->text();
     if (!text.isEmpty() && text[0].isPrint()) {
+        if (m_inCall) {
+            event->ignore();
+            return;
+        }
         m_numberLabel->setText(m_numberLabel->text() + text);
         event->accept();
         return;
@@ -476,6 +484,11 @@ void MainWindow::onIncomingCall(int callId, const QString &remoteUri)
 
 void MainWindow::setupTray()
 {
+    if (!QSystemTrayIcon::isSystemTrayAvailable()) {
+        qWarning() << "System tray not available";
+        return;
+    }
+
     QMenu *trayMenu = new QMenu(this);
 
     QAction *restoreAction = trayMenu->addAction("Restore");
@@ -575,7 +588,7 @@ void MainWindow::onAbout()
 {
     QMessageBox::about(this, "About ChirikSIP",
         "<h2>ChirikSIP</h2>"
-        "<p>Version 1.0.0</p>"
+        "<p>Version " + QApplication::applicationVersion() + "</p>"
         "<p>A simple SIP client for KDE Plasma.</p>"
         "<p>Built with Qt6 and PJSIP.</p>"
         "<p>License: MIT</p>");

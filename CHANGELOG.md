@@ -1,3 +1,28 @@
+## 1.0.0-12 (2026-06-28)
+
+### Code Review Fixes
+- Fixed data race in AudioBridge: memory_order_relaxed → release/acquire for capture/playback atomic stores
+- Fixed PortAudioManager refcount leak: AudioBridge::close() and Ringtone::stop() now call terminate()
+- Fixed m_incomingCallId not reset when remote party hangs up before answer
+- Fixed AudioBridge::close() ordering: stop stream before removing conf port
+- Fixed keyPressEvent allows input during active call
+- Fixed onCallState/onCallMediaState: validate acc_id != PJSUA_INVALID_ID before getting user data
+- Fixed CMakeLists.txt: use PkgConfig::PJSIP imported target and pkg-config for portaudio
+- Fixed SetupWizard: "Next" button changes to "Finish" on last input page
+- Fixed User-Agent version: uses PROJECT_VERSION instead of hardcoded "1.0.0"
+- Added system tray availability check before creating QSystemTrayIcon
+- Fixed m_trayIcon uninitialized pointer (now nullptr)
+- Fixed _USE_MATH_DEFINES: only defined on MSVC
+
+## 1.0.0-11 (2026-06-28)
+
+### Code Review Fixes
+- Fixed potential null pointer dereference in SipClient::onCallMediaState(): check `self` before invoking lambda
+- Fixed About dialog version string: now reads from CMake `PROJECT_VERSION` instead of hardcoded "1.0.0"
+- Added `target_compile_definitions(PROJECT_VERSION)` so source always matches CMake version
+- Removed unused `#include <pjnath.h>` from sipclient.h
+- Updated README RPM section: use version from spec, `rpmbuild -bs` for src.rpm only, exclude `.mimocode`
+
 ## 1.0.0-10 (2026-06-28)
 
 ### CI/CD

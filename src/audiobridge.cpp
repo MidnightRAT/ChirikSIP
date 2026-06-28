@@ -126,15 +126,15 @@ bool AudioBridge::open()
 
 void AudioBridge::close()
 {
-    if (m_confSlot != PJSUA_INVALID_ID) {
-        pjsua_conf_remove_port(m_confSlot);
-        m_confSlot = PJSUA_INVALID_ID;
-    }
-
     if (m_stream) {
         Pa_StopStream(m_stream);
         Pa_CloseStream(m_stream);
         m_stream = nullptr;
+    }
+
+    if (m_confSlot != PJSUA_INVALID_ID) {
+        pjsua_conf_remove_port(m_confSlot);
+        m_confSlot = PJSUA_INVALID_ID;
     }
 
     if (m_pool) {
@@ -143,6 +143,8 @@ void AudioBridge::close()
     }
 
     m_port = nullptr;
+
+    PortAudioManager::terminate();
     qInfo() << "Audio bridge closed";
 }
 
@@ -168,16 +170,16 @@ int AudioBridge::paCallback(const void *input, void *output,
     }
 
     if (output) {
-        if (self->m_playbackReady.load(std::memory_order_relaxed)) {
+        if (self->m_playbackReady.load(std::memory_order_acquire)) {
             std::memcpy(out, self->m_playbackBuffer,
                          frameCount * sizeof(float));
-            self->m_playbackReady.store(false, std::memory_order_relaxed);
+            self->m_playbackReady.store(false, std::memory_order_release);
         } else {
             std::memset(out, 0, frameCount * sizeof(float));
         }
     }
 
-    self->m_captureReady.store(input != nullptr, std::memory_order_relaxed);
+    self->m_captureReady.store(input != nullptr, std::memory_order_release);
     return paContinue;
 }
 

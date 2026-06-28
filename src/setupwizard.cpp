@@ -124,6 +124,7 @@ void SetupWizard::onNext()
     m_currentPage++;
     m_stack->setCurrentIndex(m_currentPage);
     m_backBtn->setEnabled(m_currentPage > 0);
+    m_nextBtn->setText(m_currentPage == m_pageCount - 2 ? "Finish" : "Next");
 }
 
 void SetupWizard::onBack()

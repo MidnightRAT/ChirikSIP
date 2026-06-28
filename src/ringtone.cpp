@@ -1,4 +1,6 @@
+#ifdef _MSC_VER
 #define _USE_MATH_DEFINES
+#endif
 #include "ringtone.h"
 #include "portaudio_manager.h"
 #include <QDebug>
@@ -77,6 +79,8 @@ void Ringtone::stop()
     }
 
     m_phase = 0;
+
+    PortAudioManager::terminate();
 }
 
 int Ringtone::paCallback(const void *input, void *output,

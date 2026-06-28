@@ -46,7 +46,7 @@ bool SipClient::init()
     cfg.cb.on_call_state = &SipClient::onCallState;
     cfg.cb.on_call_media_state = &SipClient::onCallMediaState;
     cfg.cb.on_incoming_call = &SipClient::onIncomingCall;
-    cfg.user_agent = pj_str(const_cast<char*>("ChirikSIP/1.0"));
+    cfg.user_agent = pj_str(const_cast<char*>("ChirikSIP/" PROJECT_VERSION));
 
     pjsua_logging_config logCfg;
     pjsua_logging_config_default(&logCfg);
@@ -317,6 +317,8 @@ void SipClient::onCallState(pjsua_call_id callId, pjsip_event *e)
 
     qInfo() << "Call" << callId << "state:" << state;
 
+    if (ci.acc_id == PJSUA_INVALID_ID) return;
+
     SipClient *self = static_cast<SipClient *>(pjsua_acc_get_user_data(ci.acc_id));
     if (self) {
         QMetaObject::invokeMethod(self, [self, callId, state]() {
@@ -324,9 +326,12 @@ void SipClient::onCallState(pjsua_call_id callId, pjsip_event *e)
         }, Qt::QueuedConnection);
 
         if (state == "DISCONNECTED") {
-            QMetaObject::invokeMethod(self, [self]() {
+            QMetaObject::invokeMethod(self, [self, callId]() {
                 if (self->m_ringtone) {
                     self->m_ringtone->stop();
+                }
+                if (callId == self->m_incomingCallId) {
+                    self->m_incomingCallId = PJSUA_INVALID_ID;
                 }
                 if (self->m_audioBridge) {
                     qInfo() << "Call ended, closing audio bridge";
@@ -346,7 +351,10 @@ void SipClient::onCallMediaState(pjsua_call_id callId)
     pj_status_t status = pjsua_call_get_info(callId, &ci);
     if (status != PJ_SUCCESS) return;
 
+    if (ci.acc_id == PJSUA_INVALID_ID) return;
+
     SipClient *self = static_cast<SipClient *>(pjsua_acc_get_user_data(ci.acc_id));
+    if (!self) return;
 
     if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
         return;

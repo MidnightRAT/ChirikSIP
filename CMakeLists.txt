@@ -72,14 +72,17 @@ if(WIN32)
 else()
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(PJSIP REQUIRED IMPORTED_TARGET libpjproject)
-    target_include_directories(chiriksip PRIVATE ${PJSIP_INCLUDE_DIRS})
+    pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
     target_link_libraries(chiriksip PRIVATE
         Qt6::Core Qt6::Widgets
-        ${PJSIP_LIBRARIES}
-        portaudio
+        PkgConfig::PJSIP
+        ${PORTAUDIO_LIBRARIES}
     )
-    target_compile_options(chiriksip PRIVATE ${PJSIP_CFLAGS_OTHER})
+    target_include_directories(chiriksip PRIVATE ${PORTAUDIO_INCLUDE_DIRS})
+    target_compile_options(chiriksip PRIVATE ${PJSIP_CFLAGS_OTHER} ${PORTAUDIO_CFLAGS_OTHER})
 endif()
+
+target_compile_definitions(chiriksip PRIVATE PROJECT_VERSION="${PROJECT_VERSION}")
 
 if(UNIX AND NOT APPLE)
     install(TARGETS chiriksip DESTINATION bin)

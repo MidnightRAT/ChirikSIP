@@ -4,7 +4,6 @@
 #include <QObject>
 #include <QString>
 #include <pjlib.h>
-#include <pjnath.h>
 #include <pjmedia.h>
 #include <pjmedia-codec.h>
 #include <pjsua.h>

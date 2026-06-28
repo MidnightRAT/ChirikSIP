@@ -25,7 +25,7 @@ A minimal SIP client for KDE Plasma and Windows, built with Qt6 and PJSIP.
 - Keyboard support: 0-9, *, #, +, Enter, Escape, Backspace
 - G.711 A-law (PCMA) and G.711 u-law (PCMU) codecs only
 - Windows cross-compilation support (MinGW32/64)
-- Improved stability: fixed null pointer crashes when no audio device, race conditions in PortAudio threads, and data races in ringtone playback
+- Improved stability: fixed null pointer crashes when no audio device, race conditions in PortAudio threads, data races in ringtone playback, data races in AudioBridge shared buffers (memory_order), PortAudioManager refcount leak, and m_incomingCallId not reset on remote hangup
 - Config file permissions restricted to owner-only (password security)
 
 ## Build Dependencies
@@ -71,15 +71,19 @@ Source RPM and binary RPM:
 ```bash
 # Create source tarball
 cd /path/to/ChirikSIP
-tar czf ~/rpmbuild/SOURCES/chiriksip-1.0.0.tar.gz \
-    --transform 's,^,chiriksip-1.0.0/,' \
+VERSION=$(grep 'Version:' packaging/chiriksip.spec | awk '{print $2}')
+tar czf ~/rpmbuild/SOURCES/chiriksip-${VERSION}.tar.gz \
+    --transform "s,^,chiriksip-${VERSION}/," \
     --exclude build --exclude build-win32 --exclude build-win64 \
     --exclude dist-win32 --exclude dist-win64 \
-    --exclude .git --exclude .gitignore \
+    --exclude .git --exclude .gitignore --exclude .mimocode \
     .
 
-# Build
-rpmbuild -ba packaging/chiriksip.spec
+# Build source RPM only (binary RPM requires Fedora with all deps)
+rpmbuild -bs packaging/chiriksip.spec
+
+# On Fedora, build both source and binary RPM:
+# rpmbuild -ba packaging/chiriksip.spec
 ```
 
 ## Cross-Compilation (Windows)
@@ -92,7 +96,7 @@ GitHub Actions workflows:
 
 | Workflow | Trigger | Platform | Output |
 |----------|---------|----------|--------|
-| `build-linux.yml` | Push/PR to `main`, `dev-ghaction` | Fedora 44 | src.rpm, binary.rpm, cmake build |
+| `build-linux.yml` | Push/PR to `main`, `dev-ghaction` | Fedora 44 (CI) / Ubuntu (CI) | src.rpm, cmake build |
 | `build-windows.yml` | Push/PR to `main`, `dev-ghaction` | Windows (MSYS2) | .exe + DLLs |
 
 Workflows run automatically when changes touch `src/`, `packaging/`, `CMakeLists.txt`, or `resources/`.

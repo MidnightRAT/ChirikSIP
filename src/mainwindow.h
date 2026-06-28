@@ -53,7 +53,7 @@ private:
 
     SipClient *m_sipClient;
 
-    QSystemTrayIcon *m_trayIcon;
+    QSystemTrayIcon *m_trayIcon = nullptr;
     bool m_forceQuit = false;
 
     QLabel *m_numberLabel;
