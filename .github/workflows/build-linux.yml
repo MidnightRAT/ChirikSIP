@@ -35,10 +35,12 @@ jobs:
             cmake \
             g++ \
             make \
+            ninja-build \
             pkg-config \
             qt6-base-dev \
             portaudio19-dev \
             libssl-dev \
+            libasound2-dev \
             rpm
 
       - name: Build PJSIP from source
@@ -47,14 +49,13 @@ jobs:
           cd pjproject
           mkdir build && cd build
           cmake .. \
+            -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/usr \
             -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-            -DPJMEDIAAUDIOBACKEND=0 \
-            -DPJVIDEO=0 \
-            -DPJSAMPLE_RATE=0
-          cmake --build . -j$(nproc)
-          sudo cmake --install .
+            -DPJMEDIAAUDIOBACKEND=0
+          ninja
+          sudo ninja install
 
       - name: Create rpmbuild tree
         run: |
@@ -110,10 +111,12 @@ jobs:
             cmake \
             g++ \
             make \
+            ninja-build \
             pkg-config \
             qt6-base-dev \
             portaudio19-dev \
-            libssl-dev
+            libssl-dev \
+            libasound2-dev
 
       - name: Build PJSIP from source
         run: |
@@ -121,23 +124,23 @@ jobs:
           cd pjproject
           mkdir build && cd build
           cmake .. \
+            -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/usr \
             -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-            -DPJMEDIAAUDIOBACKEND=0 \
-            -DPJVIDEO=0 \
-            -DPJSAMPLE_RATE=0
-          cmake --build . -j$(nproc)
-          sudo cmake --install .
+            -DPJMEDIAAUDIOBACKEND=0
+          ninja
+          sudo ninja install
 
-      - name: Configure
+      - name: Configure ChirikSIP
         run: |
           mkdir build && cd build
           cmake .. \
+            -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/usr
 
-      - name: Build
+      - name: Build ChirikSIP
         run: cmake --build build
 
       - name: Validate desktop file
