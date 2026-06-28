@@ -6,3 +6,7 @@ dist-win64/
 *.o
 *.d
 *.rpm
+*.user
+.idea/
+.vscode/
+CMakeUserPresets.json

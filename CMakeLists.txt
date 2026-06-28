@@ -14,6 +14,7 @@ set(APP_SOURCES
     src/audiobridge.cpp
     src/ringtone.cpp
     src/callnotification.cpp
+    src/scrollhelper.cpp
 )
 
 if(WIN32)
