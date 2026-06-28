@@ -31,10 +31,13 @@ ChirikSIP працює на Windows через Wine. Нумпад, кнопки 
 ### Майстер налаштування
 
 ![Wizard Step 1](Wine_wizard_1.png)
+
 Крок 1: Привітання.
 
 ![Wizard Step 2](Wine_wizard_2.png)
+
 Крок 2: Введення SIP-сервера.
 
 ![Wizard Step 3](Wine_wizard_3.png)
+
 Крок 3: Налаштування акаунту.
