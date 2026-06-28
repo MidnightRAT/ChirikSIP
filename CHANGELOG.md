@@ -1,9 +1,10 @@
 ## 1.0.0-9 (2026-06-28)
 
 ### CI/CD
-- Added GitHub Actions workflow for Linux RPM builds (Fedora 44 container)
+- Added GitHub Actions workflow for Linux RPM builds (Fedora 42 container)
 - Added GitHub Actions workflow for cmake build verification on Linux
 - Updated Windows build workflow triggers for dev-ghaction and main branches
+- Fixed container image: Fedora 44 → Fedora 42 for GitHub Actions compatibility
 
 ## 1.0.0-8 (2026-06-28)
 

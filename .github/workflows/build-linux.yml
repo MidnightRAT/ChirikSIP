@@ -20,7 +20,7 @@ on:
 jobs:
   build-rpm:
     runs-on: ubuntu-latest
-    container: fedora:44
+    container: fedora:42
 
     steps:
       - uses: actions/checkout@v4
@@ -77,7 +77,7 @@ jobs:
 
   build-cmake:
     runs-on: ubuntu-latest
-    container: fedora:44
+    container: fedora:42
 
     steps:
       - uses: actions/checkout@v4
