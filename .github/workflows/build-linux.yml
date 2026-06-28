@@ -83,19 +83,15 @@ jobs:
       - name: Build source RPM
         run: rpmbuild -bs packaging/chiriksip.spec
 
-      - name: Build binary RPM
-        run: rpmbuild -ba packaging/chiriksip.spec
-
       - name: Collect artifacts
         run: |
           mkdir -p artifacts
           cp ~/rpmbuild/SRPMS/*.rpm artifacts/ 2>/dev/null || true
-          cp ~/rpmbuild/RPMS/*/*.rpm artifacts/ 2>/dev/null || true
 
       - name: Upload RPM artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: chiriksip-linux-rpm
+          name: chiriksip-linux-srcrpm
           path: artifacts/
 
   build-cmake:
