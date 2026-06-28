@@ -2,9 +2,9 @@ name: Build Windows
 
 on:
   push:
-    branches: [ mingw ]
+    branches: [ dev-ghaction, main ]
   pull_request:
-    branches: [ mingw ]
+    branches: [ dev-ghaction, main ]
 
 jobs:
   build:

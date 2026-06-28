@@ -1,0 +1,115 @@
+name: Build Linux RPM
+
+on:
+  push:
+    branches: [ dev-ghaction, main ]
+    paths:
+      - 'src/**'
+      - 'packaging/**'
+      - 'CMakeLists.txt'
+      - 'resources/**'
+      - '.github/workflows/build-linux.yml'
+  pull_request:
+    branches: [ dev-ghaction, main ]
+    paths:
+      - 'src/**'
+      - 'packaging/**'
+      - 'CMakeLists.txt'
+      - 'resources/**'
+
+jobs:
+  build-rpm:
+    runs-on: ubuntu-latest
+    container: fedora:44
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          dnf install -y \
+            cmake \
+            gcc-c++ \
+            make \
+            qt6-qtbase-devel \
+            pjproject-devel \
+            portaudio-devel \
+            desktop-file-utils \
+            hicolor-icon-theme \
+            rpm-build \
+            rpmdevtools
+
+      - name: Create rpmbuild tree
+        run: rpmdev-setuptree 2>/dev/null || mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
+      - name: Create source tarball
+        run: |
+          VERSION=$(grep 'Version:' packaging/chiriksip.spec | awk '{print $2}')
+          tar czf ~/rpmbuild/SOURCES/chiriksip-${VERSION}.tar.gz \
+            --transform "s,^,chiriksip-${VERSION}/," \
+            --exclude build \
+            --exclude build-win32 \
+            --exclude build-win64 \
+            --exclude dist-win32 \
+            --exclude dist-win64 \
+            --exclude .git \
+            --exclude .gitignore \
+            --exclude .mimocode \
+            .
+
+      - name: Build source RPM
+        run: rpmbuild -bs packaging/chiriksip.spec
+
+      - name: Build binary RPM
+        run: rpmbuild -ba packaging/chiriksip.spec
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p artifacts
+          cp ~/rpmbuild/SRPMS/*.rpm artifacts/ 2>/dev/null || true
+          cp ~/rpmbuild/RPMS/*/*.rpm artifacts/ 2>/dev/null || true
+
+      - name: Upload RPM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: chiriksip-linux-rpm
+          path: artifacts/
+
+  build-cmake:
+    runs-on: ubuntu-latest
+    container: fedora:44
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          dnf install -y \
+            cmake \
+            gcc-c++ \
+            make \
+            qt6-qtbase-devel \
+            pjproject-devel \
+            portaudio-devel \
+            desktop-file-utils \
+            hicolor-icon-theme
+
+      - name: Configure
+        run: |
+          mkdir build && cd build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Validate desktop file
+        run: |
+          desktop-file-validate resources/chiriksip.desktop || true
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: chiriksip-linux-binary
+          path: build/chiriksip
