@@ -86,6 +86,17 @@ rpmbuild -ba packaging/chiriksip.spec
 
 See [CROSS-COMPILE.md](CROSS-COMPILE.md) for MinGW cross-compilation via Docker.
 
+## CI/CD
+
+GitHub Actions workflows:
+
+| Workflow | Trigger | Platform | Output |
+|----------|---------|----------|--------|
+| `build-linux.yml` | Push/PR to `main`, `dev-ghaction` | Fedora 44 | src.rpm, binary.rpm, cmake build |
+| `build-windows.yml` | Push/PR to `main`, `dev-ghaction` | Windows (MSYS2) | .exe + DLLs |
+
+Workflows run automatically when changes touch `src/`, `packaging/`, `CMakeLists.txt`, or `resources/`.
+
 ## Usage
 
 1. Launch `chiriksip`
