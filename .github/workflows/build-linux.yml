@@ -20,27 +20,26 @@ on:
 jobs:
   build-rpm:
     runs-on: ubuntu-latest
-    container: fedora:42
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Install build dependencies
         run: |
-          dnf install -y \
+          sudo apt-get update
+          sudo apt-get install -y \
             cmake \
-            gcc-c++ \
+            g++ \
             make \
-            qt6-qtbase-devel \
-            pjproject-devel \
-            portaudio-devel \
-            desktop-file-utils \
-            hicolor-icon-theme \
-            rpm-build \
-            rpmdevtools
+            qt6-base-dev \
+            libpjproject-dev \
+            portaudio19-dev \
+            rpm \
+            rpmbuild
 
       - name: Create rpmbuild tree
-        run: rpmdev-setuptree 2>/dev/null || mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+        run: |
+          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 
       - name: Create source tarball
         run: |
@@ -77,22 +76,20 @@ jobs:
 
   build-cmake:
     runs-on: ubuntu-latest
-    container: fedora:42
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Install build dependencies
         run: |
-          dnf install -y \
+          sudo apt-get update
+          sudo apt-get install -y \
             cmake \
-            gcc-c++ \
+            g++ \
             make \
-            qt6-qtbase-devel \
-            pjproject-devel \
-            portaudio-devel \
-            desktop-file-utils \
-            hicolor-icon-theme
+            qt6-base-dev \
+            libpjproject-dev \
+            portaudio19-dev
 
       - name: Configure
         run: |
@@ -106,6 +103,7 @@ jobs:
 
       - name: Validate desktop file
         run: |
+          sudo apt-get install -y desktop-file-utils
           desktop-file-validate resources/chiriksip.desktop || true
 
       - name: Upload build output
