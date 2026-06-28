@@ -1,8 +1,8 @@
 #include "callnotification.h"
 #include "sipclient.h"
+#include "scrollhelper.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QFontMetrics>
 #include <QApplication>
 
 CallNotification::CallNotification(SipClient *client, QWidget *parent)
@@ -36,9 +36,7 @@ CallNotification::CallNotification(SipClient *client, QWidget *parent)
 
     mainLayout->addWidget(displayWidget);
 
-    m_scrollTimer = new QTimer(this);
-    m_scrollTimer->setInterval(200);
-    connect(m_scrollTimer, &QTimer::timeout, this, &CallNotification::onScrollTick);
+    m_scrollHelper = new ScrollHelper(m_nameLabel, this);
 
     QHBoxLayout *btnLayout = new QHBoxLayout();
     btnLayout->setSpacing(6);
@@ -70,19 +68,10 @@ void CallNotification::showNotification(const QString &number, const QString &na
     m_numberLabel->setText(number);
 
     if (!name.isEmpty()) {
-        QFontMetrics fm(m_nameLabel->font());
-        int avail = m_nameLabel->width() - 20;
-        if (fm.horizontalAdvance(name) <= avail) {
-            m_nameLabel->setText(name);
-            m_scrollTimer->stop();
-        } else {
-            m_scrollText = name;
-            m_scrollOffset = 0;
-            m_scrollTimer->start();
-        }
+        m_scrollHelper->setText(name);
     } else {
+        m_scrollHelper->stop();
         m_nameLabel->setText("-= UNKNOWN =-");
-        m_scrollTimer->stop();
     }
 
     show();
@@ -92,43 +81,25 @@ void CallNotification::showNotification(const QString &number, const QString &na
 
 void CallNotification::hideNotification()
 {
-    m_scrollTimer->stop();
+    m_scrollHelper->stop();
     hide();
 }
 
 void CallNotification::onAnswer()
 {
-    m_scrollTimer->stop();
-    m_client->answerCall();
-    emit accepted();
+    m_scrollHelper->stop();
+    if (!m_client->answerCall()) {
+        emit rejected();
+    } else {
+        emit accepted();
+    }
     hide();
 }
 
 void CallNotification::onReject()
 {
-    m_scrollTimer->stop();
+    m_scrollHelper->stop();
     m_client->hangup();
     emit rejected();
     hide();
-}
-
-void CallNotification::onScrollTick()
-{
-    if (m_scrollText.isEmpty()) {
-        m_scrollTimer->stop();
-        return;
-    }
-
-    QFontMetrics fm(m_nameLabel->font());
-    int avail = m_nameLabel->width() - 20;
-    if (fm.horizontalAdvance(m_scrollText) <= avail) {
-        m_nameLabel->setText(m_scrollText);
-        m_scrollTimer->stop();
-        return;
-    }
-
-    QString sep = " *|* ";
-    QString src = m_scrollText + sep;
-    m_nameLabel->setText(src.mid(m_scrollOffset % src.length(), 30));
-    m_scrollOffset++;
 }

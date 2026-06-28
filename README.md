@@ -25,6 +25,8 @@ A minimal SIP client for KDE Plasma and Windows, built with Qt6 and PJSIP.
 - Keyboard support: 0-9, *, #, +, Enter, Escape, Backspace
 - G.711 A-law (PCMA) and G.711 u-law (PCMU) codecs only
 - Windows cross-compilation support (MinGW32/64)
+- Improved stability: fixed null pointer crashes when no audio device, race conditions in PortAudio threads, and data races in ringtone playback
+- Config file permissions restricted to owner-only (password security)
 
 ## Build Dependencies
 
@@ -48,12 +50,12 @@ A minimal SIP client for KDE Plasma and Windows, built with Qt6 and PJSIP.
 | `portaudio` | Audio device access |
 | `hicolor-icon-theme` | System icons |
 
-## Build
+## Build from Source
 
 ```bash
 mkdir build && cd build
 cmake ..
-make
+cmake --build .
 ```
 
 ## Install
@@ -64,9 +66,25 @@ cmake --install build
 
 ## RPM Build
 
+Source RPM and binary RPM:
+
 ```bash
+# Create source tarball
+cd /path/to/ChirikSIP
+tar czf ~/rpmbuild/SOURCES/chiriksip-1.0.0.tar.gz \
+    --transform 's,^,chiriksip-1.0.0/,' \
+    --exclude build --exclude build-win32 --exclude build-win64 \
+    --exclude dist-win32 --exclude dist-win64 \
+    --exclude .git --exclude .gitignore \
+    .
+
+# Build
 rpmbuild -ba packaging/chiriksip.spec
 ```
+
+## Cross-Compilation (Windows)
+
+See [CROSS-COMPILE.md](CROSS-COMPILE.md) for MinGW cross-compilation via Docker.
 
 ## Usage
 

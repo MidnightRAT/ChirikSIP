@@ -1,7 +1,8 @@
 Name:           chiriksip
 Version:        1.0.0
-Release:        6%{?dist}
+Release:        8%{?dist}
 Summary:        A simple SIP client for KDE Plasma
+
 License:        MIT
 URL:            https://github.com/chirik/ChirikSIP
 
@@ -24,8 +25,9 @@ Requires:       hicolor-icon-theme
 %description
 ChirikSIP is a minimal SIP client built with Qt6 and PJSIP.
 Supports SIP registration, making and receiving calls, audio via
-PortAudio, phone-style numpad UI, caller name display, and settings
-persistence. Built for AlmaLinux 9.
+PortAudio, phone-style numpad UI, caller name display, setup wizard,
+system tray with incoming call popup, and settings persistence.
+Targets Fedora / KDE Plasma.
 
 %prep
 %autosetup -n %{name}-%{version}
@@ -51,8 +53,16 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop || :
 %{_datadir}/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
+* Sun Jun 28 2026 Chirik <chirik@example.com> - 1.0.0-8
+- Bug fixes: null pointer crashes, PortAudio lifecycle race conditions,
+  atomic ringtone variables, ScrollHelper text restore, config file
+  permissions restricted to 0600
+* Sun Jun 28 2026 Chirik <chirik@example.com> - 1.0.0-7
+- System tray, call notification popup, hangup fixes, ScrollHelper,
+  PortAudioManager, Windows cross-compilation, Docker build scripts,
+  GitHub Actions CI, screenshots, spec path fix
 * Fri Jun 26 2026 Chirik <chirik@example.com> - 1.0.0-1
-- Initial RPM package for AlmaLinux 9
+- Initial RPM package for Fedora
 - SIP registration and calls via PJSIP
 - Audio bridge via PortAudio
 - Phone-style numpad UI

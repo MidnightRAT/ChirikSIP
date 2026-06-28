@@ -1,4 +1,21 @@
-## 1.0.0 (2026-06-26)
+## 1.0.0-8 (2026-06-28)
+
+### Bug Fixes
+- Fixed null pointer dereference in AudioBridge::open() when no audio device available
+- Fixed PortAudio lifecycle: Ringtone and AudioBridge no longer call Pa_Terminate() prematurely; lifecycle managed by SipClient::shutdown()
+- Fixed data race in Ringtone: m_playing and m_phase are now std::atomic
+- Fixed race condition in onCallMediaState: skip AudioBridge creation if call is already disconnected
+- Fixed ScrollHelper::stop() not restoring original text after scroll
+- Fixed CallNotification::onAnswer() not handling answerCall() failure
+- Added delay before PortAudioManager::terminate() to ensure callback threads finish
+- Restricted config file permissions to 0600 (owner-only) for password security
+
+### Technical
+- AudioBridge::open() validates Pa_GetDefaultInputDevice/OutputDevice and Pa_GetDeviceInfo() before use
+- PortAudioManager::terminate() now only called from SipClient::shutdown()
+- Added QThread::msleep(50) gap between stream close and Pa_Terminate()
+
+## 1.0.0-7 (2026-06-28)
 
 ### Features
 - SIP registration with digest authentication (realm wildcard)
@@ -19,7 +36,7 @@
 - Auto-registration on startup
 - Menu bar: File (Exit), Settings, Help (About)
 - Embedded icon via Qt resources (.qrc)
-- .desktop file with hicolor icons (16-256px) on Linux
+- .desktop file with hicolor icons (16–256px) on Linux
 - Keyboard support: 0-9, *, #, +, Enter, Escape, Backspace
 - Button "0+": short press = "0", long press = "+"
 - Hangup button: short press = delete last digit / end call, long press = clear all / end call
@@ -27,6 +44,11 @@
 - Windows cross-compilation: MinGW32 and MinGW64 builds
 - Windows executable: GUI app (no console window)
 - Windows .ico icon embedded in .exe
+- PortAudioManager: ref-counted init/term with mutex (#83fcb2d)
+- ScrollHelper: smooth text scrolling for long caller names (#1eedaff)
+- CallNotification: popup dialog with Answer/Reject buttons (#147422b)
+- GitHub Actions CI for Windows builds (#a72b4b7)
+- Docker + cross-compile scripts for MinGW (#aa054ef, #5d5e837)
 
 ### Bug Fixes
 - Fixed SIP URI construction for phone numbers (auto-append @server)
@@ -37,9 +59,14 @@
 - Fixed thread safety for AudioBridge creation
 - Fixed Hangup button state after call ends
 - Fixed display text alignment and scrolling
+- Fixed Windows icon loading and tray icon setup (#446e5d4)
+- Fixed close-to-tray vs force-quit logic on Windows (#446e5d4)
+- Fixed build artifacts tracked in git (#d1753e8)
 
 ### Technical
 - Built with Qt6, PJSIP 2.13.1, PortAudio 19.7
 - Targets KDE Plasma on Fedora 44
 - C++17, CMake 3.20+
 - RPM packaging with hicolor icons and .desktop validation
+- Cross-compilation: MinGW-w64 (x86_64 + i686) via Docker
+- RPM spec in `packaging/chiriksip.spec`

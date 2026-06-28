@@ -2,6 +2,7 @@
 #define AUDIOBRIDGE_H
 
 #include <QObject>
+#include <atomic>
 #include <pjmedia.h>
 #include <pjsua.h>
 #include <portaudio.h>
@@ -37,8 +38,8 @@ private:
 
     float m_captureBuffer[160];
     float m_playbackBuffer[160];
-    bool m_captureReady = false;
-    bool m_playbackReady = false;
+    std::atomic<bool> m_captureReady{false};
+    std::atomic<bool> m_playbackReady{false};
 };
 
 #endif // AUDIOBRIDGE_H

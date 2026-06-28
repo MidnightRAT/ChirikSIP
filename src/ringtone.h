@@ -2,6 +2,7 @@
 #define RINGTONE_H
 
 #include <QObject>
+#include <atomic>
 #include <portaudio.h>
 
 class Ringtone : public QObject
@@ -22,8 +23,8 @@ private:
                           void *userData);
 
     PaStream *m_stream = nullptr;
-    bool m_playing = false;
-    unsigned m_phase = 0;
+    std::atomic<bool> m_playing{false};
+    std::atomic<unsigned> m_phase{0};
 };
 
 #endif // RINGTONE_H

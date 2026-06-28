@@ -9,6 +9,7 @@
 
 class SipClient;
 class CallNotification;
+class ScrollHelper;
 
 class MainWindow : public QMainWindow
 {
@@ -34,7 +35,6 @@ private slots:
     void onRegistrationStatus(bool ok, const QString &message);
     void onCallStateChanged(int callId, const QString &state);
     void onIncomingCall(int callId, const QString &remoteUri);
-    void onScrollTick();
 
     void onAbout();
     void onSettings();
@@ -63,11 +63,9 @@ private:
     QPushButton *m_hangupBtn;
     QLabel *m_statusLabel;
 
-    QTimer *m_scrollTimer;
+    ScrollHelper *m_scrollHelper;
     QTimer *m_longPressTimer;
     QTimer *m_zeroTimer;
-    QString m_scrollText;
-    int m_scrollOffset = 0;
 
     bool m_inCall = false;
     bool m_incomingWaiting = false;

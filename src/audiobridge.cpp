@@ -1,4 +1,5 @@
 #include "audiobridge.h"
+#include "portaudio_manager.h"
 #include <QDebug>
 #include <cstring>
 #include <portaudio.h>
@@ -19,35 +20,51 @@ AudioBridge::~AudioBridge()
 
 bool AudioBridge::open()
 {
-    PaError err = Pa_Initialize();
-    if (err != paNoError) {
-        qCritical() << "Pa_Initialize failed:" << Pa_GetErrorText(err);
-        return false;
-    }
+    PortAudioManager::initialize();
 
     PaStreamParameters inputParams;
     inputParams.device = Pa_GetDefaultInputDevice();
+    if (inputParams.device == paNoDevice) {
+        qCritical() << "No default input audio device";
+        PortAudioManager::terminate();
+        return false;
+    }
+    const PaDeviceInfo *inputDevInfo = Pa_GetDeviceInfo(inputParams.device);
+    if (!inputDevInfo) {
+        qCritical() << "Failed to get input device info";
+        PortAudioManager::terminate();
+        return false;
+    }
     inputParams.channelCount = CHANNELS;
     inputParams.sampleFormat = paFloat32;
-    inputParams.suggestedLatency =
-        Pa_GetDeviceInfo(inputParams.device)->defaultLowInputLatency;
+    inputParams.suggestedLatency = inputDevInfo->defaultLowInputLatency;
     inputParams.hostApiSpecificStreamInfo = nullptr;
 
     PaStreamParameters outputParams;
     outputParams.device = Pa_GetDefaultOutputDevice();
+    if (outputParams.device == paNoDevice) {
+        qCritical() << "No default output audio device";
+        PortAudioManager::terminate();
+        return false;
+    }
+    const PaDeviceInfo *outputDevInfo = Pa_GetDeviceInfo(outputParams.device);
+    if (!outputDevInfo) {
+        qCritical() << "Failed to get output device info";
+        PortAudioManager::terminate();
+        return false;
+    }
     outputParams.channelCount = CHANNELS;
     outputParams.sampleFormat = paFloat32;
-    outputParams.suggestedLatency =
-        Pa_GetDeviceInfo(outputParams.device)->defaultLowOutputLatency;
+    outputParams.suggestedLatency = outputDevInfo->defaultLowOutputLatency;
     outputParams.hostApiSpecificStreamInfo = nullptr;
 
-    err = Pa_OpenStream(&m_stream,
+    PaError err = Pa_OpenStream(&m_stream,
                         &inputParams, &outputParams,
                         SAMPLE_RATE, FRAMES_PER_BUFFER,
                         paClipOff, paCallback, this);
     if (err != paNoError) {
         qCritical() << "Pa_OpenStream failed:" << Pa_GetErrorText(err);
-        Pa_Terminate();
+        PortAudioManager::terminate();
         return false;
     }
 
@@ -55,7 +72,7 @@ bool AudioBridge::open()
     if (err != paNoError) {
         qCritical() << "Pa_StartStream failed:" << Pa_GetErrorText(err);
         Pa_CloseStream(m_stream);
-        Pa_Terminate();
+        PortAudioManager::terminate();
         m_stream = nullptr;
         return false;
     }
@@ -65,7 +82,7 @@ bool AudioBridge::open()
         qCritical() << "Failed to create pool for audio bridge";
         Pa_StopStream(m_stream);
         Pa_CloseStream(m_stream);
-        Pa_Terminate();
+        PortAudioManager::terminate();
         m_stream = nullptr;
         return false;
     }
@@ -77,7 +94,7 @@ bool AudioBridge::open()
         m_pool = nullptr;
         Pa_StopStream(m_stream);
         Pa_CloseStream(m_stream);
-        Pa_Terminate();
+        PortAudioManager::terminate();
         m_stream = nullptr;
         return false;
     }
@@ -98,7 +115,7 @@ bool AudioBridge::open()
         m_port = nullptr;
         Pa_StopStream(m_stream);
         Pa_CloseStream(m_stream);
-        Pa_Terminate();
+        PortAudioManager::terminate();
         m_stream = nullptr;
         return false;
     }
@@ -126,7 +143,6 @@ void AudioBridge::close()
     }
 
     m_port = nullptr;
-    Pa_Terminate();
     qInfo() << "Audio bridge closed";
 }
 
@@ -143,22 +159,25 @@ int AudioBridge::paCallback(const void *input, void *output,
     const float *in = static_cast<const float *>(input);
     float *out = static_cast<float *>(output);
 
-    if (input && self->m_captureReady) {
+    if (frameCount > FRAMES_PER_BUFFER)
+        frameCount = FRAMES_PER_BUFFER;
+
+    if (input && self->m_captureReady.load(std::memory_order_relaxed)) {
         std::memcpy(self->m_captureBuffer, in,
                      frameCount * sizeof(float));
     }
 
     if (output) {
-        if (self->m_playbackReady) {
+        if (self->m_playbackReady.load(std::memory_order_relaxed)) {
             std::memcpy(out, self->m_playbackBuffer,
                          frameCount * sizeof(float));
-            self->m_playbackReady = false;
+            self->m_playbackReady.store(false, std::memory_order_relaxed);
         } else {
             std::memset(out, 0, frameCount * sizeof(float));
         }
     }
 
-    self->m_captureReady = (input != nullptr);
+    self->m_captureReady.store(input != nullptr, std::memory_order_relaxed);
     return paContinue;
 }
 
@@ -176,7 +195,7 @@ pj_status_t AudioBridge::putFrame(pjmedia_port *port, pjmedia_frame *frame)
     for (unsigned i = 0; i < count; ++i)
         self->m_playbackBuffer[i] = samples[i] / 32768.0f;
 
-    self->m_playbackReady = true;
+    self->m_playbackReady.store(true, std::memory_order_release);
     return PJ_SUCCESS;
 }
 
@@ -193,7 +212,7 @@ pj_status_t AudioBridge::getFrame(pjmedia_port *port, pjmedia_frame *frame)
     if (count > FRAMES_PER_BUFFER)
         count = FRAMES_PER_BUFFER;
 
-    if (self->m_captureReady) {
+    if (self->m_captureReady.load(std::memory_order_acquire)) {
         for (unsigned i = 0; i < count; ++i) {
             float s = self->m_captureBuffer[i] * 32767.0f;
             if (s > 32767.0f) s = 32767.0f;

@@ -4,9 +4,9 @@
 #include <QDialog>
 #include <QLabel>
 #include <QPushButton>
-#include <QTimer>
 
 class SipClient;
+class ScrollHelper;
 
 class CallNotification : public QDialog
 {
@@ -24,7 +24,6 @@ signals:
 private slots:
     void onAnswer();
     void onReject();
-    void onScrollTick();
 
 private:
     SipClient *m_client;
@@ -32,9 +31,7 @@ private:
     QLabel *m_nameLabel;
     QPushButton *m_answerBtn;
     QPushButton *m_rejectBtn;
-    QTimer *m_scrollTimer;
-    QString m_scrollText;
-    int m_scrollOffset = 0;
+    ScrollHelper *m_scrollHelper;
 };
 
 #endif // CALLNOTIFICATION_H

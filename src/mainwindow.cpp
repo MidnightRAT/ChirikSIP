@@ -2,6 +2,7 @@
 #include "sipclient.h"
 #include "settingsdialog.h"
 #include "callnotification.h"
+#include "scrollhelper.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -13,6 +14,30 @@
 #include <QAction>
 #include <QSystemTrayIcon>
 #include <QApplication>
+#include <QFile>
+
+static const QString STYLE_STATUS_DEFAULT = QStringLiteral("color: gray; padding: 4px; font-size: 11px;");
+static const QString STYLE_STATUS_OK = QStringLiteral("color: #4CAF50; padding: 4px; font-size: 11px;");
+static const QString STYLE_STATUS_OK_BOLD = QStringLiteral("color: #4CAF50; padding: 4px; font-size: 11px; font-weight: bold;");
+static const QString STYLE_STATUS_REGISTERING = QStringLiteral("color: #FF9800; padding: 4px; font-size: 11px;");
+static const QString STYLE_STATUS_REGISTERING_BOLD = QStringLiteral("color: #FF9800; padding: 4px; font-size: 11px; font-weight: bold;");
+static const QString STYLE_STATUS_CONNECTING = QStringLiteral("color: #2196F3; padding: 4px; font-size: 11px;");
+static const QString STYLE_STATUS_CONNECTING_BOLD = QStringLiteral("color: #2196F3; padding: 4px; font-size: 11px; font-weight: bold;");
+static const QString STYLE_STATUS_ERROR = QStringLiteral("color: #f44336; padding: 4px; font-size: 11px;");
+static const QString STYLE_CALL_BTN = QStringLiteral(
+    "QPushButton { font-size: 16px; font-weight: bold; "
+    "background: #2e7d32; color: white; border: none; border-radius: 8px; }"
+    "QPushButton:pressed { background: #1b5e20; }"
+    "QPushButton:disabled { background: #555; color: #999; }");
+static const QString STYLE_CALL_BTN_ANSWER = QStringLiteral(
+    "QPushButton { font-size: 16px; font-weight: bold; "
+    "background: #2e7d32; color: white; border: none; border-radius: 8px; }"
+    "QPushButton:pressed { background: #1b5e20; }");
+static const QString STYLE_HANGUP_BTN = QStringLiteral(
+    "QPushButton { font-size: 16px; font-weight: bold; "
+    "background: #c62828; color: white; border: none; border-radius: 8px; }"
+    "QPushButton:pressed { background: #8e0000; }"
+    "QPushButton:disabled { background: #555; color: #999; }");
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -51,9 +76,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     mainLayout->addWidget(displayWidget);
 
-    m_scrollTimer = new QTimer(this);
-    m_scrollTimer->setInterval(200);
-    connect(m_scrollTimer, &QTimer::timeout, this, &MainWindow::onScrollTick);
+    m_scrollHelper = new ScrollHelper(m_nameLabel, this);
 
     QGridLayout *numpad = new QGridLayout();
     numpad->setSpacing(3);
@@ -91,19 +114,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     m_callBtn = new QPushButton("Call", central);
     m_callBtn->setMinimumHeight(50);
-    m_callBtn->setStyleSheet(
-        "QPushButton { font-size: 16px; font-weight: bold; "
-        "background: #2e7d32; color: white; border: none; border-radius: 8px; }"
-        "QPushButton:pressed { background: #1b5e20; }"
-        "QPushButton:disabled { background: #555; color: #999; }");
+    m_callBtn->setStyleSheet(STYLE_CALL_BTN);
 
     m_hangupBtn = new QPushButton("Hangup", central);
     m_hangupBtn->setMinimumHeight(50);
-    m_hangupBtn->setStyleSheet(
-        "QPushButton { font-size: 16px; font-weight: bold; "
-        "background: #c62828; color: white; border: none; border-radius: 8px; }"
-        "QPushButton:pressed { background: #8e0000; }"
-        "QPushButton:disabled { background: #555; color: #999; }");
+    m_hangupBtn->setStyleSheet(STYLE_HANGUP_BTN);
 
     m_longPressTimer = new QTimer(this);
     m_longPressTimer->setSingleShot(true);
@@ -121,7 +136,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     m_statusLabel = new QLabel("Not registered", central);
     m_statusLabel->setAlignment(Qt::AlignLeft);
-    m_statusLabel->setStyleSheet("color: gray; padding: 4px; font-size: 11px;");
+    m_statusLabel->setStyleSheet(STYLE_STATUS_DEFAULT);
     mainLayout->addWidget(m_statusLabel);
 
     m_sipClient->init();
@@ -154,6 +169,12 @@ void MainWindow::saveSettings()
     settings.setValue("server", m_server);
     settings.setValue("username", m_username);
     settings.setValue("password", m_password);
+    settings.sync();
+
+    QFile configFile(settings.fileName());
+    if (configFile.exists()) {
+        configFile.setPermissions(QFile::ReadOwner | QFile::WriteOwner);
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -199,11 +220,11 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             m_callBtn->setEnabled(true);
             m_callBtn->setText("Call");
             m_hangupBtn->setEnabled(true);
-            m_scrollTimer->stop();
+            m_scrollHelper->stop();
             m_numberLabel->setText("");
             m_nameLabel->setText("");
             m_statusLabel->setText("Call ended");
-            m_statusLabel->setStyleSheet("color: gray; padding: 4px; font-size: 11px;");
+            m_statusLabel->setStyleSheet(STYLE_STATUS_DEFAULT);
         }
         event->accept();
         return;
@@ -252,27 +273,6 @@ QString MainWindow::parseDisplayName(const QString &uri)
     return QString();
 }
 
-void MainWindow::onScrollTick()
-{
-    if (m_scrollText.isEmpty()) {
-        m_scrollTimer->stop();
-        return;
-    }
-
-    QFontMetrics fm(m_nameLabel->font());
-    int avail = m_nameLabel->width() - 20;
-    if (fm.horizontalAdvance(m_scrollText) <= avail) {
-        m_nameLabel->setText(m_scrollText);
-        m_scrollTimer->stop();
-        return;
-    }
-
-    QString sep = " *|* ";
-    QString src = m_scrollText + sep;
-    m_nameLabel->setText(src.mid(m_scrollOffset % src.length(), 30));
-    m_scrollOffset++;
-}
-
 void MainWindow::onNumpadClicked()
 {
     QPushButton *btn = qobject_cast<QPushButton *>(sender());
@@ -316,7 +316,7 @@ void MainWindow::onHangupReleased()
         m_longPressTimer->stop();
         if (m_inCall || m_incomingWaiting) {
             m_sipClient->hangup();
-            m_scrollTimer->stop();
+            m_scrollHelper->stop();
             if (m_callNotification)
                 m_callNotification->hideNotification();
         } else {
@@ -334,7 +334,7 @@ void MainWindow::onHangupLongPress()
     m_longPressFired = true;
     if (m_inCall || m_incomingWaiting) {
         m_sipClient->hangup();
-        m_scrollTimer->stop();
+        m_scrollHelper->stop();
         if (m_callNotification)
             m_callNotification->hideNotification();
     } else {
@@ -350,9 +350,9 @@ void MainWindow::onCallClicked()
             m_incomingWaiting = false;
             m_callBtn->setEnabled(false);
             m_hangupBtn->setEnabled(true);
-            m_scrollTimer->stop();
+            m_scrollHelper->stop();
             m_statusLabel->setText("Call active");
-            m_statusLabel->setStyleSheet("color: #4CAF50; padding: 4px; font-size: 11px; font-weight: bold;");
+            m_statusLabel->setStyleSheet(STYLE_STATUS_OK_BOLD);
         }
         return;
     }
@@ -366,7 +366,7 @@ void MainWindow::onCallClicked()
         m_callBtn->setEnabled(false);
         m_hangupBtn->setEnabled(true);
         m_statusLabel->setText("Calling: " + number);
-        m_statusLabel->setStyleSheet("color: #2196F3; padding: 4px; font-size: 11px; font-weight: bold;");
+        m_statusLabel->setStyleSheet(STYLE_STATUS_CONNECTING_BOLD);
     }
 }
 
@@ -378,7 +378,7 @@ void MainWindow::onRegisterClicked()
     }
 
     m_statusLabel->setText("Registering...");
-    m_statusLabel->setStyleSheet("color: #FF9800; padding: 4px; font-size: 11px;");
+    m_statusLabel->setStyleSheet(STYLE_STATUS_REGISTERING);
     m_sipClient->registerAccount(m_server, m_username, m_password);
 }
 
@@ -386,12 +386,12 @@ void MainWindow::onRegistrationStatus(bool ok, const QString &message)
 {
     if (ok) {
         m_statusLabel->setText("Registered");
-        m_statusLabel->setStyleSheet("color: #4CAF50; padding: 4px; font-size: 11px;");
+        m_statusLabel->setStyleSheet(STYLE_STATUS_OK);
         m_callBtn->setEnabled(true);
         m_hangupBtn->setEnabled(true);
     } else {
         m_statusLabel->setText(message);
-        m_statusLabel->setStyleSheet("color: #f44336; padding: 4px; font-size: 11px;");
+        m_statusLabel->setStyleSheet(STYLE_STATUS_ERROR);
     }
 }
 
@@ -401,25 +401,25 @@ void MainWindow::onCallStateChanged(int callId, const QString &state)
 
     if (state == "CONFIRMED") {
         m_statusLabel->setText("Call active");
-        m_statusLabel->setStyleSheet("color: #4CAF50; padding: 4px; font-size: 11px; font-weight: bold;");
+        m_statusLabel->setStyleSheet(STYLE_STATUS_OK_BOLD);
         if (m_callNotification)
             m_callNotification->hideNotification();
-    } else if (state == "DISCONNCTD") {
+    } else if (state == "DISCONNECTED") {
         m_inCall = false;
         m_incomingWaiting = false;
         m_callBtn->setEnabled(true);
         m_callBtn->setText("Call");
         m_hangupBtn->setEnabled(true);
-        m_scrollTimer->stop();
+        m_scrollHelper->stop();
         m_numberLabel->setText("");
         m_nameLabel->setText("");
         m_statusLabel->setText("Call ended");
-        m_statusLabel->setStyleSheet("color: gray; padding: 4px; font-size: 11px;");
+        m_statusLabel->setStyleSheet(STYLE_STATUS_DEFAULT);
         if (m_callNotification)
             m_callNotification->hideNotification();
     } else if (state == "CALLING" || state == "EARLY" || state == "CONNECTING") {
         m_statusLabel->setText("Connecting...");
-        m_statusLabel->setStyleSheet("color: #2196F3; padding: 4px; font-size: 11px;");
+        m_statusLabel->setStyleSheet(STYLE_STATUS_CONNECTING);
     }
 }
 
@@ -434,23 +434,18 @@ void MainWindow::onIncomingCall(int callId, const QString &remoteUri)
     m_numberLabel->setText(number);
 
     if (!name.isEmpty()) {
-        m_scrollText = name;
-        m_scrollOffset = 0;
-        m_scrollTimer->start();
+        m_scrollHelper->setText(name);
     } else {
-        m_scrollText.clear();
+        m_scrollHelper->stop();
         m_nameLabel->setText("-= UNKNOWN =-");
     }
 
     m_callBtn->setEnabled(true);
     m_callBtn->setText("Answer");
-    m_callBtn->setStyleSheet(
-        "QPushButton { font-size: 16px; font-weight: bold; "
-        "background: #2e7d32; color: white; border: none; border-radius: 8px; }"
-        "QPushButton:pressed { background: #1b5e20; }");
+    m_callBtn->setStyleSheet(STYLE_CALL_BTN_ANSWER);
     m_hangupBtn->setEnabled(true);
     m_statusLabel->setText("Incoming call");
-    m_statusLabel->setStyleSheet("color: #FF9800; padding: 4px; font-size: 11px; font-weight: bold;");
+    m_statusLabel->setStyleSheet(STYLE_STATUS_REGISTERING_BOLD);
 
     if (!isVisible()) {
         if (!m_callNotification)
@@ -461,18 +456,18 @@ void MainWindow::onIncomingCall(int callId, const QString &remoteUri)
             m_incomingWaiting = false;
             m_callBtn->setEnabled(false);
             m_hangupBtn->setEnabled(true);
-            m_scrollTimer->stop();
+            m_scrollHelper->stop();
             m_statusLabel->setText("Call active");
-            m_statusLabel->setStyleSheet("color: #4CAF50; padding: 4px; font-size: 11px; font-weight: bold;");
+            m_statusLabel->setStyleSheet(STYLE_STATUS_OK_BOLD);
         }, Qt::UniqueConnection);
 
         connect(m_callNotification, &CallNotification::rejected, this, [this]() {
             m_incomingWaiting = false;
-            m_scrollTimer->stop();
+            m_scrollHelper->stop();
             m_numberLabel->setText("");
             m_nameLabel->setText("");
             m_statusLabel->setText("Call rejected");
-            m_statusLabel->setStyleSheet("color: gray; padding: 4px; font-size: 11px;");
+            m_statusLabel->setStyleSheet(STYLE_STATUS_DEFAULT);
         }, Qt::UniqueConnection);
 
         m_callNotification->showNotification(number, name);
@@ -570,7 +565,7 @@ void MainWindow::onSettings()
 
         if (changed && !m_server.isEmpty() && !m_username.isEmpty()) {
             m_statusLabel->setText("Re-registering...");
-            m_statusLabel->setStyleSheet("color: #FF9800; padding: 4px; font-size: 11px;");
+            m_statusLabel->setStyleSheet(STYLE_STATUS_REGISTERING);
             m_sipClient->registerAccount(m_server, m_username, m_password);
         }
     }

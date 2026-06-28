@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "setupwizard.h"
 #include <QApplication>
+#include <QFile>
 #include <QIcon>
 #include <QSettings>
 #include <QStandardPaths>
@@ -31,7 +32,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
     app.setOrganizationName("chiriksip");
     app.setApplicationName("chiriksip");
-    app.setApplicationVersion("1.0.0");
+    app.setApplicationVersion("1.0.0-8");
     QSettings::setDefaultFormat(QSettings::IniFormat);
 
     app.setWindowIcon(findAppIcon());
@@ -45,6 +46,12 @@ int main(int argc, char *argv[])
         settings.setValue("server", wizard.server());
         settings.setValue("username", wizard.username());
         settings.setValue("password", wizard.password());
+        settings.sync();
+
+        QFile configFile(settings.fileName());
+        if (configFile.exists()) {
+            configFile.setPermissions(QFile::ReadOwner | QFile::WriteOwner);
+        }
     }
 
     MainWindow window;

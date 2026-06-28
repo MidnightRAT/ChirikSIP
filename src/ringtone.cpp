@@ -1,5 +1,7 @@
 #define _USE_MATH_DEFINES
 #include "ringtone.h"
+#include "portaudio_manager.h"
+#include <QDebug>
 #include <cmath>
 #include <cstring>
 
@@ -24,13 +26,12 @@ void Ringtone::start()
     if (m_stream)
         return;
 
-    PaError err = Pa_Initialize();
-    if (err != paNoError)
-        return;
+    PortAudioManager::initialize();
 
     PaDeviceIndex dev = Pa_GetDefaultOutputDevice();
     if (dev == paNoDevice) {
-        Pa_Terminate();
+        qWarning() << "No audio output device found for ringtone";
+        PortAudioManager::terminate();
         return;
     }
 
@@ -42,20 +43,22 @@ void Ringtone::start()
         Pa_GetDeviceInfo(dev)->defaultLowOutputLatency;
     outputParams.hostApiSpecificStreamInfo = nullptr;
 
-    err = Pa_OpenStream(&m_stream,
+    PaError err = Pa_OpenStream(&m_stream,
                         nullptr, &outputParams,
                         RING_RATE, 160,
                         paClipOff, paCallback, this);
     if (err != paNoError) {
-        Pa_Terminate();
+        qWarning() << "Ringtone Pa_OpenStream failed:" << Pa_GetErrorText(err);
+        PortAudioManager::terminate();
         return;
     }
 
     err = Pa_StartStream(m_stream);
     if (err != paNoError) {
+        qWarning() << "Ringtone Pa_StartStream failed:" << Pa_GetErrorText(err);
         Pa_CloseStream(m_stream);
         m_stream = nullptr;
-        Pa_Terminate();
+        PortAudioManager::terminate();
         return;
     }
 
@@ -71,7 +74,6 @@ void Ringtone::stop()
         Pa_StopStream(m_stream);
         Pa_CloseStream(m_stream);
         m_stream = nullptr;
-        Pa_Terminate();
     }
 
     m_phase = 0;
