@@ -32,10 +32,10 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get install -y \
+            build-essential \
             cmake \
             g++ \
             make \
-            ninja-build \
             pkg-config \
             qt6-base-dev \
             portaudio19-dev \
@@ -47,15 +47,19 @@ jobs:
         run: |
           git clone --depth 1 --branch 2.13.1 https://github.com/pjsip/pjproject.git
           cd pjproject
-          mkdir build && cd build
-          cmake .. \
-            -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX=/usr \
-            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-            -DPJMEDIAAUDIOBACKEND=0
-          ninja
-          sudo ninja install
+          ./configure \
+            --prefix=/usr \
+            --enable-shared \
+            --disable-static \
+            --disable-video \
+            --disable-silk \
+            --disable-opencore-amr \
+            --disable-libyuv \
+            --disable-libwebrtc
+          make dep
+          make -j$(nproc)
+          sudo make install
+          sudo ldconfig
 
       - name: Create rpmbuild tree
         run: |
@@ -108,10 +112,10 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get install -y \
+            build-essential \
             cmake \
             g++ \
             make \
-            ninja-build \
             pkg-config \
             qt6-base-dev \
             portaudio19-dev \
@@ -122,21 +126,24 @@ jobs:
         run: |
           git clone --depth 1 --branch 2.13.1 https://github.com/pjsip/pjproject.git
           cd pjproject
-          mkdir build && cd build
-          cmake .. \
-            -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX=/usr \
-            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-            -DPJMEDIAAUDIOBACKEND=0
-          ninja
-          sudo ninja install
+          ./configure \
+            --prefix=/usr \
+            --enable-shared \
+            --disable-static \
+            --disable-video \
+            --disable-silk \
+            --disable-opencore-amr \
+            --disable-libyuv \
+            --disable-libwebrtc
+          make dep
+          make -j$(nproc)
+          sudo make install
+          sudo ldconfig
 
       - name: Configure ChirikSIP
         run: |
           mkdir build && cd build
           cmake .. \
-            -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/usr
 
