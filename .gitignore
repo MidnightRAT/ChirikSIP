@@ -1,13 +1,8 @@
 build/
-*.o
-*.d
-*.rpm
-build-win64/
-
-build-win32/
-build-win64/
-
 build-win32/
 build-win64/
 dist-win32/
 dist-win64/
+*.o
+*.d
+*.rpm
