@@ -24,18 +24,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Enable universe repository
+        run: |
+          sudo add-apt-repository -y universe
+          sudo apt-get update
+
       - name: Install build dependencies
         run: |
-          sudo apt-get update
           sudo apt-get install -y \
             cmake \
             g++ \
             make \
             qt6-base-dev \
-            libpjproject-dev \
             portaudio19-dev \
-            rpm \
-            rpmbuild
+            rpm
+
+      - name: Build PJSIP from source
+        run: |
+          git clone --depth 1 --branch 2.13.1 https://github.com/pjsip/pjproject.git
+          cd pjproject
+          mkdir build && cd build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DPJMEDIAAUDIOBACKEND=0
+          cmake --build . -j$(nproc)
+          sudo cmake --install .
 
       - name: Create rpmbuild tree
         run: |
@@ -80,16 +94,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Enable universe repository
+        run: |
+          sudo add-apt-repository -y universe
+          sudo apt-get update
+
       - name: Install build dependencies
         run: |
-          sudo apt-get update
           sudo apt-get install -y \
             cmake \
             g++ \
             make \
             qt6-base-dev \
-            libpjproject-dev \
             portaudio19-dev
+
+      - name: Build PJSIP from source
+        run: |
+          git clone --depth 1 --branch 2.13.1 https://github.com/pjsip/pjproject.git
+          cd pjproject
+          mkdir build && cd build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DPJMEDIAAUDIOBACKEND=0
+          cmake --build . -j$(nproc)
+          sudo cmake --install .
 
       - name: Configure
         run: |
