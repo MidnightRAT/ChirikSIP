@@ -1,3 +1,8 @@
+## 1.0.0-10 (2026-06-28)
+
+### CI/CD
+- Simplified Linux CI: ubuntu-latest without container for GitHub Actions compatibility
+
 ## 1.0.0-9 (2026-06-28)
 
 ### CI/CD

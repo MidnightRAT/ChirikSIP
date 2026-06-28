@@ -1,6 +1,6 @@
 Name:           chiriksip
 Version:        1.0.0
-Release:        9%{?dist}
+Release:        10%{?dist}
 Summary:        A simple SIP client for KDE Plasma
 
 License:        MIT
@@ -53,6 +53,8 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop || :
 %{_datadir}/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
+* Sun Jun 28 2026 Chirik <chirik@example.com> - 1.0.0-10
+- Simplified Linux CI workflow: ubuntu-latest without container
 * Sun Jun 28 2026 Chirik <chirik@example.com> - 1.0.0-9
 - Added GitHub Actions CI/CD workflows for Linux RPM and Windows builds
 * Sun Jun 28 2026 Chirik <chirik@example.com> - 1.0.0-8

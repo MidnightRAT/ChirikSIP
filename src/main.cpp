@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
     app.setOrganizationName("chiriksip");
     app.setApplicationName("chiriksip");
-    app.setApplicationVersion("1.0.0-9");
+    app.setApplicationVersion("1.0.0-10");
     QSettings::setDefaultFormat(QSettings::IniFormat);
 
     app.setWindowIcon(findAppIcon());
