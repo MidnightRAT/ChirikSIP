@@ -1,6 +1,6 @@
 Name:           chiriksip
 Version:        1.0.0
-Release:        12%{?dist}
+Release:        13%{?dist}
 Summary:        A simple SIP client for KDE Plasma
 
 License:        MIT
@@ -53,6 +53,15 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop || :
 %{_datadir}/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
+* Sun Jun 28 2026 Chirik <chirik@example.com> - 1.0.0-13
+- Deep code review: fixed data races in AudioBridge (memory_order),
+  PortAudioManager refcount leak in AudioBridge/Ringtone close/stop,
+  m_incomingCallId not reset on remote hangup, AudioBridge close() ordering,
+  keyPressEvent input blocked during call, acc_id validation in callbacks,
+  CMakeLists.txt uses PkgConfig::PJSIP and portaudio-2.0,
+  SetupWizard "Finish" button text, User-Agent uses PROJECT_VERSION,
+  system tray availability check, m_trayIcon nullptr initialization,
+  SetupWizard Enter key support and active-field focus
 * Sun Jun 28 2026 Chirik <chirik@example.com> - 1.0.0-12
 - Deep code review fixes: fixed data races in AudioBridge (memory_order),
   PortAudioManager refcount leak in AudioBridge/Ringtone close/stop,

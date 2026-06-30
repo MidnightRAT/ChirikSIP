@@ -33,6 +33,7 @@ SetupWizard::SetupWizard(QWidget *parent)
 
     connect(m_nextBtn, &QPushButton::clicked, this, &SetupWizard::onNext);
     connect(m_backBtn, &QPushButton::clicked, this, &SetupWizard::onBack);
+    m_nextBtn->setDefault(true);
 }
 
 bool SetupWizard::isFirstRun()
@@ -103,6 +104,7 @@ void SetupWizard::setupPages()
     m_stack->addWidget(finish);
 
     m_pageCount = m_stack->count();
+    m_serverEdit->setFocus();
 }
 
 void SetupWizard::onNext()
@@ -125,6 +127,11 @@ void SetupWizard::onNext()
     m_stack->setCurrentIndex(m_currentPage);
     m_backBtn->setEnabled(m_currentPage > 0);
     m_nextBtn->setText(m_currentPage == m_pageCount - 2 ? "Finish" : "Next");
+
+    if (m_currentPage == 1)
+        m_serverEdit->setFocus();
+    else if (m_currentPage == 2)
+        m_usernameEdit->setFocus();
 }
 
 void SetupWizard::onBack()

@@ -13,6 +13,7 @@
 - Added system tray availability check before creating QSystemTrayIcon
 - Fixed m_trayIcon uninitialized pointer (now nullptr)
 - Fixed _USE_MATH_DEFINES: only defined on MSVC
+- Fixed SetupWizard: Enter triggers Next/Finish button and focus moves to active field
 
 ## 1.0.0-11 (2026-06-28)
 
