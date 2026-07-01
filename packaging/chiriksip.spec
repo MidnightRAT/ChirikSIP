@@ -1,6 +1,6 @@
 Name:           chiriksip
 Version:        1.0.0
-Release:        15%{?dist}
+Release:        16%{?dist}
 Summary:        A simple SIP client for KDE Plasma
 
 License:        MIT
@@ -53,6 +53,10 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop || :
 %{_datadir}/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
+* Sun Jun 28 2026 Chirik <chirikrat@gmail.com> - 1.0.0-16
+- Clock centered on first display line
+- Setup Wizard accessible from Settings menu
+- About dialog shows build date and time
 * Sun Jun 28 2026 Chirik <chirikrat@gmail.com> - 1.0.0-15
 - Fixed audio disappearing when port was set to 0
 - Fixed port label not updating after settings change

@@ -1,3 +1,11 @@
+## 1.0.0-16 (2026-07-01)
+
+### Features
+- Clock centered on first display line
+- Setup Wizard accessible from Settings menu
+- About dialog shows build date and time
+- Fixed RPM changelog date warnings
+
 ## 1.0.0-15 (2026-07-01)
 
 ### Bug Fixes
