@@ -96,12 +96,12 @@ cmake --install build
 
 ## RPM Build
 
-Source RPM and binary RPM:
+### Local Build (Fedora)
 
 ```bash
 # Create source tarball
 cd /path/to/ChirikSIP
-VERSION=$(grep 'Version:' packaging/chiriksip.spec | awk '{print $2}')
+VERSION=$(grep 'Version:' packaging/chirik.spec | awk '{print $2}')
 tar czf ~/rpmbuild/SOURCES/chiriksip-${VERSION}.tar.gz \
     --transform "s,^,chiriksip-${VERSION}/," \
     --exclude build --exclude build-win32 --exclude build-win64 \
@@ -116,6 +116,37 @@ rpmbuild -bs packaging/chiriksip.spec
 # rpmbuild -ba packaging/chiriksip.spec
 ```
 
+### Container Build (podman/docker)
+
+Build RPM packages in containers for Fedora 36+ without installing dependencies on your host system.
+
+**Prerequisites:** podman or docker installed
+
+```bash
+# Build for a single Fedora version
+./build-rpm.sh "42"
+
+# Build for multiple versions (matrix build)
+./build-rpm.sh "40 41 42"
+
+# Build with rpmfusion repositories (for older Fedora or additional codecs)
+./build-rpm.sh --rpmfusion "36 37 38"
+
+# Force rebuild without cache
+./build-rpm.sh --force "42"
+```
+
+Artifacts are saved to `build/rpms/`:
+- `chiriksip-*.rpm` — main package
+- `chiriksip-debuginfo-*.rpm` — debug symbols
+- `chiriksip-debugsource-*.rpm` — debug source
+- `chiriksip-*.src.rpm` — source RPM
+
+**Options:**
+- `--rpmfusion` — enable rpmfusion-free and rpmfusion-nonfree repositories
+- `--force` — rebuild without Docker/podman cache
+- `-h, --help` — show usage information
+
 ## Cross-Compilation (Windows)
 
 See [CROSS-COMPILE.md](CROSS-COMPILE.md) for MinGW cross-compilation via Docker.
@@ -126,7 +157,8 @@ GitHub Actions workflows:
 
 | Workflow | Trigger | Platform | Output |
 |----------|---------|----------|--------|
-| `build-linux.yml` | Push/PR to `main`, `dev-ghaction` | Fedora 44 (CI) / Ubuntu (CI) | src.rpm, cmake build |
+| `build-rpm.yml` | Push/PR to `main` | Ubuntu (podman) | RPM packages for Fedora 40, 41, 42 |
+| `build-linux.yml` | Push/PR to `main`, `dev-ghaction` | Ubuntu (CI) | src.rpm, cmake build |
 | `build-windows.yml` | Push/PR to `main`, `dev-ghaction` | Windows (MSYS2) | .exe + DLLs |
 
 Workflows run automatically when changes touch `src/`, `packaging/`, `CMakeLists.txt`, or `resources/`.

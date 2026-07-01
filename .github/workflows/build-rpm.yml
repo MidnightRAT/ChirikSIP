@@ -1,0 +1,43 @@
+name: Build RPM
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'packaging/**'
+      - 'CMakeLists.txt'
+      - 'resources/**'
+      - 'Containerfile.rpmbuild'
+      - 'build-rpm.sh'
+      - '.github/workflows/build-rpm.yml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-rpm:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        fedora: ['40', '41', '42']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+
+      - name: Build RPM for Fedora ${{ matrix.fedora }}
+        run: |
+          chmod +x build-rpm.sh
+          ./build-rpm.sh "${{ matrix.fedora }}"
+
+      - name: Upload RPM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: chiriksip-rpm-f${{ matrix.fedora }}
+          path: build/rpms/*.rpm

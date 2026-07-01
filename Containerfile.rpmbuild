@@ -1,0 +1,37 @@
+ARG FEDORA_VERSION=42
+FROM fedora:${FEDORA_VERSION}
+
+ARG FEDORA_VERSION
+ARG INSTALL_RPMFUSION=false
+
+# Install rpmfusion if requested
+RUN if [ "$INSTALL_RPMFUSION" = "true" ]; then \
+        dnf install -y \
+            https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
+            https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm \
+        && dnf clean all; \
+    fi
+
+# Update and install build dependencies
+RUN dnf upgrade -y \
+    && dnf group install -y "development-tools" "rpm-development-tools" \
+    && dnf install -y \
+        cmake \
+        desktop-file-utils \
+        gcc-c++ \
+        hicolor-icon-theme \
+        pkgconfig \
+        portaudio-devel \
+        qt6-qtbase-devel \
+        pjproject-devel \
+        gsm-devel \
+        speex-devel \
+        speexdsp-devel \
+        openssl-devel \
+        libuuid-devel \
+        alsa-lib-devel \
+    && dnf clean all
+
+WORKDIR /build
+
+ENTRYPOINT ["/bin/bash"]
