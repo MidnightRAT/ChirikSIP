@@ -33,7 +33,6 @@ void Ringtone::start()
     PaDeviceIndex dev = Pa_GetDefaultOutputDevice();
     if (dev == paNoDevice) {
         qWarning() << "No audio output device found for ringtone";
-        PortAudioManager::terminate();
         return;
     }
 
@@ -51,7 +50,6 @@ void Ringtone::start()
                         paClipOff, paCallback, this);
     if (err != paNoError) {
         qWarning() << "Ringtone Pa_OpenStream failed:" << Pa_GetErrorText(err);
-        PortAudioManager::terminate();
         return;
     }
 
@@ -60,7 +58,6 @@ void Ringtone::start()
         qWarning() << "Ringtone Pa_StartStream failed:" << Pa_GetErrorText(err);
         Pa_CloseStream(m_stream);
         m_stream = nullptr;
-        PortAudioManager::terminate();
         return;
     }
 
@@ -79,8 +76,6 @@ void Ringtone::stop()
     }
 
     m_phase = 0;
-
-    PortAudioManager::terminate();
 }
 
 int Ringtone::paCallback(const void *input, void *output,

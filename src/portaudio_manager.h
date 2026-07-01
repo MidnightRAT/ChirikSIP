@@ -21,7 +21,7 @@ public:
     static void terminate()
     {
         std::lock_guard<std::mutex> lock(mutex());
-        if (--refCount() == 0) {
+        if (refCount() > 0 && --refCount() == 0) {
             Pa_Terminate();
         }
     }

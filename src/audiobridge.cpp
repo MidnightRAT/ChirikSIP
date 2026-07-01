@@ -26,13 +26,11 @@ bool AudioBridge::open()
     inputParams.device = Pa_GetDefaultInputDevice();
     if (inputParams.device == paNoDevice) {
         qCritical() << "No default input audio device";
-        PortAudioManager::terminate();
         return false;
     }
     const PaDeviceInfo *inputDevInfo = Pa_GetDeviceInfo(inputParams.device);
     if (!inputDevInfo) {
         qCritical() << "Failed to get input device info";
-        PortAudioManager::terminate();
         return false;
     }
     inputParams.channelCount = CHANNELS;
@@ -44,13 +42,11 @@ bool AudioBridge::open()
     outputParams.device = Pa_GetDefaultOutputDevice();
     if (outputParams.device == paNoDevice) {
         qCritical() << "No default output audio device";
-        PortAudioManager::terminate();
         return false;
     }
     const PaDeviceInfo *outputDevInfo = Pa_GetDeviceInfo(outputParams.device);
     if (!outputDevInfo) {
         qCritical() << "Failed to get output device info";
-        PortAudioManager::terminate();
         return false;
     }
     outputParams.channelCount = CHANNELS;
@@ -64,7 +60,6 @@ bool AudioBridge::open()
                         paClipOff, paCallback, this);
     if (err != paNoError) {
         qCritical() << "Pa_OpenStream failed:" << Pa_GetErrorText(err);
-        PortAudioManager::terminate();
         return false;
     }
 
@@ -72,7 +67,6 @@ bool AudioBridge::open()
     if (err != paNoError) {
         qCritical() << "Pa_StartStream failed:" << Pa_GetErrorText(err);
         Pa_CloseStream(m_stream);
-        PortAudioManager::terminate();
         m_stream = nullptr;
         return false;
     }
@@ -82,7 +76,6 @@ bool AudioBridge::open()
         qCritical() << "Failed to create pool for audio bridge";
         Pa_StopStream(m_stream);
         Pa_CloseStream(m_stream);
-        PortAudioManager::terminate();
         m_stream = nullptr;
         return false;
     }
@@ -94,7 +87,6 @@ bool AudioBridge::open()
         m_pool = nullptr;
         Pa_StopStream(m_stream);
         Pa_CloseStream(m_stream);
-        PortAudioManager::terminate();
         m_stream = nullptr;
         return false;
     }
@@ -115,7 +107,6 @@ bool AudioBridge::open()
         m_port = nullptr;
         Pa_StopStream(m_stream);
         Pa_CloseStream(m_stream);
-        PortAudioManager::terminate();
         m_stream = nullptr;
         return false;
     }
@@ -144,7 +135,6 @@ void AudioBridge::close()
 
     m_port = nullptr;
 
-    PortAudioManager::terminate();
     qInfo() << "Audio bridge closed";
 }
 

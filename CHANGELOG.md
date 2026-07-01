@@ -1,3 +1,17 @@
+## 1.0.0-18 (2026-07-01)
+
+### Bug Fixes
+- Fixed audio disappearing after the first call: PortAudio lifecycle moved to SipClient (init/shutdown only)
+- Fixed PortAudioManager refCount going negative from multiple terminate() calls
+- Fixed clock overwriting dialed number every second while dialing
+- Fixed Hangup button and Backspace key erasing clock digits when not in dialing mode
+
+### Features
+- Clock disappears on first keypress during dialing, showing dialed number right-aligned
+- Dialed number persists on display until end of call
+- Incoming caller number displayed right-aligned during incoming call
+- Call duration shown centered on second display line during active call
+
 ## 1.0.0-17 (2026-07-01)
 
 ### Bug Fixes

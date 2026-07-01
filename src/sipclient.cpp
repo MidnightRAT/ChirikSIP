@@ -108,6 +108,8 @@ bool SipClient::init(int port)
 
     pjsua_set_null_snd_dev();
 
+    PortAudioManager::initialize();
+
     m_initialized = true;
     qInfo() << "SIP client initialized on port" << m_boundPort;
     return true;

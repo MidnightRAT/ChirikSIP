@@ -53,6 +53,8 @@ private:
     void loadSettings();
     void saveSettings();
     int effectivePort() const;
+    void setClockDisplay();
+    void setCallDisplay();
 
     SipClient *m_sipClient;
 
@@ -78,6 +80,8 @@ private:
     bool m_inCall = false;
     bool m_incomingWaiting = false;
     bool m_longPressFired = false;
+    bool m_dialingMode = false;
+    QString m_dialedNumber;
 
     QString m_server;
     QString m_username;
