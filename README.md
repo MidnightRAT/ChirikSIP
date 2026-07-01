@@ -2,6 +2,9 @@
 
 A minimal SIP client for KDE Plasma, built with Qt6 and PJSIP.
 
+![Build RPM](https://github.com/MidnightRAT/ChirikSIP/actions/workflows/build-rpm.yml/badge.svg)
+![Build DEB](https://github.com/MidnightRAT/ChirikSIP/actions/workflows/build-deb.yml/badge.svg)
+
 ![Linux Main Window](screenshots/Linux_dark_main.png)
 
 Детальніші скріншоти див. у [screenshots/README.md](screenshots/README.md)
