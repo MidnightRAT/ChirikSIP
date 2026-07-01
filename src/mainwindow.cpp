@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "sipclient.h"
 #include "settingsdialog.h"
+#include "setupwizard.h"
 #include "callnotification.h"
 #include "scrollhelper.h"
 #include <QVBoxLayout>
@@ -64,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent)
     displayLayout->setSpacing(0);
 
     m_numberLabel = new QLabel(displayWidget);
-    m_numberLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    m_numberLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     m_numberLabel->setStyleSheet("color: #e0e0e0; font-size: 32px; font-weight: bold; background: transparent; font-family: 'Segment16A';");
     m_numberLabel->setMinimumHeight(40);
     displayLayout->addWidget(m_numberLabel);
@@ -593,6 +594,23 @@ void MainWindow::setupMenu()
     settingsAction->setShortcut(QKeySequence("Ctrl+,"));
     connect(settingsAction, &QAction::triggered, this, &MainWindow::onSettings);
 
+    QAction *wizardAction = settingsMenu->addAction("&Setup Wizard");
+    connect(wizardAction, &QAction::triggered, this, [this]() {
+        SetupWizard wizard(this);
+        if (wizard.exec() == QDialog::Accepted) {
+            m_server = wizard.server();
+            m_username = wizard.username();
+            m_password = wizard.password();
+            m_port = wizard.port();
+            saveSettings();
+            if (!m_server.isEmpty() && !m_username.isEmpty()) {
+                m_statusLabel->setText("Re-registering...");
+                m_statusLabel->setStyleSheet(STYLE_STATUS_REGISTERING);
+                m_sipClient->registerAccount(m_server, m_username, m_password, m_port);
+            }
+        }
+    });
+
     QMenu *helpMenu = menu->addMenu("&Help");
     QAction *aboutAction = helpMenu->addAction("&About ChirikSIP");
     connect(aboutAction, &QAction::triggered, this, &MainWindow::onAbout);
@@ -655,6 +673,7 @@ void MainWindow::onAbout()
     QMessageBox::about(this, "About ChirikSIP",
         "<h2>ChirikSIP</h2>"
         "<p>Version " + QApplication::applicationVersion() + "</p>"
+        "<p>Build: " __DATE__ " " __TIME__ "</p>"
         "<p>A simple SIP client for KDE Plasma.</p>"
         "<p>Built with Qt6 and PJSIP.</p>"
         "<p>License: MIT</p>");

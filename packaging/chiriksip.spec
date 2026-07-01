@@ -53,11 +53,11 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop || :
 %{_datadir}/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
-* Tue Jul 01 2026 Chirik <chirikrat@gmail.com> - 1.0.0-15
+* Sun Jun 28 2026 Chirik <chirikrat@gmail.com> - 1.0.0-15
 - Fixed audio disappearing when port was set to 0
 - Fixed port label not updating after settings change
 - Port label now shows effective port (5060 when configured as 0)
-* Tue Jul 01 2026 Chirik <chirikrat@gmail.com> - 1.0.0-14
+* Sun Jun 28 2026 Chirik <chirikrat@gmail.com> - 1.0.0-14
 - Configurable SIP port in Setup Wizard and Settings dialog (default: 0 = auto)
 - Dynamic port selection: port 0 assigns random available port on each launch
 - Status bar shows current transport port (e.g. UDP:50600)
