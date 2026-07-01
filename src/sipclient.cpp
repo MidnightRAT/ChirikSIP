@@ -75,7 +75,7 @@ bool SipClient::init(int port)
 
     pjsua_transport_config transportCfg;
     pjsua_transport_config_default(&transportCfg);
-    transportCfg.port = port;
+    transportCfg.port = (port > 0) ? port : SIP_PORT;
 
     status = pjsua_transport_create(PJSIP_TRANSPORT_UDP, &transportCfg, nullptr);
     if (status != PJ_SUCCESS) {
@@ -84,12 +84,7 @@ bool SipClient::init(int port)
         return false;
     }
 
-    unsigned tpCount = 1;
-    pjsua_transport_id tpId;
-    pjsua_enum_transports(&tpId, &tpCount);
-    pjsua_transport_info tpInfo;
-    pjsua_transport_get_info(tpId, &tpInfo);
-    m_boundPort = tpInfo.local_name.port;
+    m_boundPort = transportCfg.port;
 
     status = pjsua_start();
     if (status != PJ_SUCCESS) {

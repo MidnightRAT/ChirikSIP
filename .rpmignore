@@ -1,0 +1,15 @@
+build/
+build-win32/
+build-win64/
+dist-win32/
+dist-win64/
+.git/
+.gitignore
+.rpmignore
+.mimocode/
+AGENTS.md
+CMakeUserPresets.json
+.idea/
+.vscode/
+*.o
+*.d
