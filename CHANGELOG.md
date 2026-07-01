@@ -6,7 +6,8 @@
 - Port label now shows effective port (5060 when configured as 0)
 
 ### Features
-- Display current time (HH:mm:ss) on second line when idle
+- Display current time (HH:mm:ss) on first line of display when idle
+- Show call duration timer (HH:MM:SS) centered in status bar during calls
 
 ## 1.0.0-14 (2026-07-01)
 

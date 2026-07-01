@@ -42,6 +42,7 @@ private slots:
     void onTrayRestore();
     void onTrayExit();
     void updateClock();
+    void updateCallDuration();
 
 private:
     static QString parseNumber(const QString &uri);
@@ -64,12 +65,15 @@ private:
     QPushButton *m_callBtn;
     QPushButton *m_hangupBtn;
     QLabel *m_statusLabel;
+    QLabel *m_callDurationLabel;
     QLabel *m_portLabel;
 
     ScrollHelper *m_scrollHelper;
     QTimer *m_longPressTimer;
     QTimer *m_zeroTimer;
     QTimer *m_clockTimer;
+    QTimer *m_callDurationTimer;
+    int m_callDuration = 0;
 
     bool m_inCall = false;
     bool m_incomingWaiting = false;

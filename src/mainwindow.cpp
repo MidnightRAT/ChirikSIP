@@ -82,6 +82,10 @@ MainWindow::MainWindow(QWidget *parent)
     m_clockTimer = new QTimer(this);
     connect(m_clockTimer, &QTimer::timeout, this, &MainWindow::updateClock);
     m_clockTimer->start(1000);
+
+    m_callDurationTimer = new QTimer(this);
+    connect(m_callDurationTimer, &QTimer::timeout, this, &MainWindow::updateCallDuration);
+
     updateClock();
 
     QGridLayout *numpad = new QGridLayout();
@@ -144,10 +148,16 @@ MainWindow::MainWindow(QWidget *parent)
     m_statusLabel = new QLabel("Not registered", central);
     m_statusLabel->setAlignment(Qt::AlignLeft);
     m_statusLabel->setStyleSheet(STYLE_STATUS_DEFAULT);
+    m_callDurationLabel = new QLabel(central);
+    m_callDurationLabel->setAlignment(Qt::AlignCenter);
+    m_callDurationLabel->setStyleSheet(STYLE_STATUS_OK);
+    m_callDurationLabel->hide();
     m_portLabel = new QLabel(central);
     m_portLabel->setAlignment(Qt::AlignRight);
     m_portLabel->setStyleSheet(STYLE_STATUS_OK);
     statusLayout->addWidget(m_statusLabel);
+    statusLayout->addStretch();
+    statusLayout->addWidget(m_callDurationLabel);
     statusLayout->addStretch();
     statusLayout->addWidget(m_portLabel);
     mainLayout->addLayout(statusLayout);
@@ -241,8 +251,9 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             m_callBtn->setText("Call");
             m_hangupBtn->setEnabled(true);
             m_scrollHelper->stop();
-            m_numberLabel->setText("");
-            m_nameLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
+            m_callDurationTimer->stop();
+            m_callDurationLabel->hide();
+            m_numberLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
             m_statusLabel->setText("Call ended");
             m_statusLabel->setStyleSheet(STYLE_STATUS_DEFAULT);
         }
@@ -379,6 +390,9 @@ void MainWindow::onCallClicked()
             m_callBtn->setEnabled(false);
             m_hangupBtn->setEnabled(true);
             m_scrollHelper->stop();
+            m_callDuration = 0;
+            m_callDurationLabel->show();
+            m_callDurationTimer->start(1000);
             m_statusLabel->setText("Call active");
             m_statusLabel->setStyleSheet(STYLE_STATUS_OK_BOLD);
         }
@@ -393,6 +407,9 @@ void MainWindow::onCallClicked()
         m_inCall = true;
         m_callBtn->setEnabled(false);
         m_hangupBtn->setEnabled(true);
+        m_callDuration = 0;
+        m_callDurationLabel->show();
+        m_callDurationTimer->start(1000);
         m_statusLabel->setText("Calling: " + number);
         m_statusLabel->setStyleSheet(STYLE_STATUS_CONNECTING_BOLD);
     }
@@ -440,8 +457,9 @@ void MainWindow::onCallStateChanged(int callId, const QString &state)
         m_callBtn->setText("Call");
         m_hangupBtn->setEnabled(true);
             m_scrollHelper->stop();
-            m_numberLabel->setText("");
-            m_nameLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
+            m_callDurationTimer->stop();
+            m_callDurationLabel->hide();
+            m_numberLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
         m_statusLabel->setText("Call ended");
         m_statusLabel->setStyleSheet(STYLE_STATUS_DEFAULT);
         if (m_callNotification)
@@ -486,6 +504,9 @@ void MainWindow::onIncomingCall(int callId, const QString &remoteUri)
             m_callBtn->setEnabled(false);
             m_hangupBtn->setEnabled(true);
             m_scrollHelper->stop();
+            m_callDuration = 0;
+            m_callDurationLabel->show();
+            m_callDurationTimer->start(1000);
             m_statusLabel->setText("Call active");
             m_statusLabel->setStyleSheet(STYLE_STATUS_OK_BOLD);
         }, Qt::UniqueConnection);
@@ -493,8 +514,7 @@ void MainWindow::onIncomingCall(int callId, const QString &remoteUri)
         connect(m_callNotification, &CallNotification::rejected, this, [this]() {
             m_incomingWaiting = false;
             m_scrollHelper->stop();
-            m_numberLabel->setText("");
-            m_nameLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
+            m_numberLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
             m_statusLabel->setText("Call rejected");
             m_statusLabel->setStyleSheet(STYLE_STATUS_DEFAULT);
         }, Qt::UniqueConnection);
@@ -614,8 +634,20 @@ void MainWindow::onSettings()
 void MainWindow::updateClock()
 {
     if (!m_inCall && !m_incomingWaiting) {
-        m_nameLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
+        m_numberLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
     }
+}
+
+void MainWindow::updateCallDuration()
+{
+    m_callDuration++;
+    int h = m_callDuration / 3600;
+    int m = (m_callDuration % 3600) / 60;
+    int s = m_callDuration % 60;
+    m_callDurationLabel->setText(QString("%1:%2:%3")
+        .arg(h, 2, 10, QChar('0'))
+        .arg(m, 2, 10, QChar('0'))
+        .arg(s, 2, 10, QChar('0')));
 }
 
 void MainWindow::onAbout()
