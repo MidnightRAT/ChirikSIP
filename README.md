@@ -151,15 +151,20 @@ Artifacts are saved to `build/rpms/`:
 
 ### Container Build (podman/docker)
 
-Build .deb packages in containers for Ubuntu 22.04+ without installing dependencies on your host system.
+Build .deb packages in containers for Ubuntu 22.04 LTS and 24.04 LTS without installing dependencies on your host system.
+
+**Supported versions:** Ubuntu 22.04 LTS (Jammy), Ubuntu 24.04 LTS (Noble)
 
 **Prerequisites:** podman or docker installed
 
 ```bash
-# Build for a single Ubuntu version
+# Build for Ubuntu 22.04
 ./build-deb.sh "22.04"
 
-# Build for multiple versions (matrix build)
+# Build for Ubuntu 24.04
+./build-deb.sh "24.04"
+
+# Build for both LTS versions
 ./build-deb.sh "22.04 24.04"
 
 # Force rebuild without cache
