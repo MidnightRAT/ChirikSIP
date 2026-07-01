@@ -53,12 +53,12 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop || :
 %{_datadir}/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
-* Tue Jul 01 2026 Chirik <chirik@example.com> - 1.0.0-14
+* Tue Jul 01 2026 Chirik <chirikrat@gmail.com> - 1.0.0-14
 - Configurable SIP port in Setup Wizard and Settings dialog (default: 0 = auto)
 - Dynamic port selection: port 0 assigns random available port on each launch
 - Status bar shows current transport port (e.g. UDP:50600)
 - Removed dead code: ensurePortBound() and orphaned makeCall block
-* Sun Jun 28 2026 Chirik <chirik@example.com> - 1.0.0-13
+* Sun Jun 28 2026 Chirik <chirikrat@gmail.com> - 1.0.0-13
 - Deep code review: fixed data races in AudioBridge (memory_order),
   PortAudioManager refcount leak in AudioBridge/Ringtone close/stop,
   m_incomingCallId not reset on remote hangup, AudioBridge close() ordering,
@@ -67,7 +67,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop || :
   SetupWizard "Finish" button text, User-Agent uses PROJECT_VERSION,
   system tray availability check, m_trayIcon nullptr initialization,
   SetupWizard Enter key support and active-field focus
-* Sun Jun 28 2026 Chirik <chirik@example.com> - 1.0.0-12
+* Sun Jun 28 2026 Chirik <chirikrat@gmail.com> - 1.0.0-12
 - Deep code review fixes: fixed data races in AudioBridge (memory_order),
   PortAudioManager refcount leak in AudioBridge/Ringtone close/stop,
   m_incomingCallId not reset on remote hangup, AudioBridge close() ordering,
@@ -75,22 +75,22 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop || :
   CMakeLists.txt uses PkgConfig::PJSIP and portaudio-2.0,
   SetupWizard "Finish" button text, User-Agent uses PROJECT_VERSION,
   system tray availability check, m_trayIcon nullptr initialization
-* Sun Jun 28 2026 Chirik <chirik@example.com> - 1.0.0-11
+* Sun Jun 28 2026 Chirik <chirikrat@gmail.com> - 1.0.0-11
 - Code review fixes: null pointer guard in onCallMediaState, dynamic version
   in About dialog, removed unused pjnath.h header, README RPM section update
-* Sun Jun 28 2026 Chirik <chirik@example.com> - 1.0.0-10
+* Sun Jun 28 2026 Chirik <chirikrat@gmail.com> - 1.0.0-10
 - Simplified Linux CI workflow: ubuntu-latest without container
-* Sun Jun 28 2026 Chirik <chirik@example.com> - 1.0.0-9
+* Sun Jun 28 2026 Chirik <chirikrat@gmail.com> - 1.0.0-9
 - Added GitHub Actions CI/CD workflows for Linux RPM and Windows builds
-* Sun Jun 28 2026 Chirik <chirik@example.com> - 1.0.0-8
+* Sun Jun 28 2026 Chirik <chirikrat@gmail.com> - 1.0.0-8
 - Bug fixes: null pointer crashes, PortAudio lifecycle race conditions,
   atomic ringtone variables, ScrollHelper text restore, config file
   permissions restricted to 0600
-* Sun Jun 28 2026 Chirik <chirik@example.com> - 1.0.0-7
+* Sun Jun 28 2026 Chirik <chirikrat@gmail.com> - 1.0.0-7
 - System tray, call notification popup, hangup fixes, ScrollHelper,
   PortAudioManager, Windows cross-compilation, Docker build scripts,
   GitHub Actions CI, screenshots, spec path fix
-* Fri Jun 26 2026 Chirik <chirik@example.com> - 1.0.0-1
+* Fri Jun 26 2026 Chirik <chirikrat@gmail.com> - 1.0.0-1
 - Initial RPM package for Fedora
 - SIP registration and calls via PJSIP
 - Audio bridge via PortAudio

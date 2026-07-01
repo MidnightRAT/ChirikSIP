@@ -10,3 +10,4 @@ dist-win64/
 .idea/
 .vscode/
 CMakeUserPresets.json
+.mimocode/
