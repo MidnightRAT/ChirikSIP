@@ -147,6 +147,34 @@ Artifacts are saved to `build/rpms/`:
 - `--force` — rebuild without Docker/podman cache
 - `-h, --help` — show usage information
 
+## DEB Build
+
+### Container Build (podman/docker)
+
+Build .deb packages in containers for Ubuntu 22.04+ without installing dependencies on your host system.
+
+**Prerequisites:** podman or docker installed
+
+```bash
+# Build for a single Ubuntu version
+./build-deb.sh "22.04"
+
+# Build for multiple versions (matrix build)
+./build-deb.sh "22.04 24.04"
+
+# Force rebuild without cache
+./build-deb.sh --force "24.04"
+```
+
+Artifacts are saved to `build/debs/`:
+- `chiriksip_*.deb` — main package
+- `chiriksip_*.changes` — changes file
+- `chiriksip_*.buildinfo` — build info
+
+**Options:**
+- `--force` — rebuild without Docker/podman cache
+- `-h, --help` — show usage information
+
 ## Cross-Compilation (Windows)
 
 See [CROSS-COMPILE.md](CROSS-COMPILE.md) for MinGW cross-compilation via Docker.
@@ -158,10 +186,11 @@ GitHub Actions workflows:
 | Workflow | Trigger | Platform | Output |
 |----------|---------|----------|--------|
 | `build-rpm.yml` | Push/PR to `main` | Ubuntu (podman) | RPM packages for Fedora 40, 41, 42 |
+| `build-deb.yml` | Push/PR to `main` | Ubuntu (podman) | DEB packages for Ubuntu 22.04, 24.04 |
 | `build-linux.yml` | Push/PR to `main`, `dev-ghaction` | Ubuntu (CI) | src.rpm, cmake build |
 | `build-windows.yml` | Push/PR to `main`, `dev-ghaction` | Windows (MSYS2) | .exe + DLLs |
 
-Workflows run automatically when changes touch `src/`, `packaging/`, `CMakeLists.txt`, or `resources/`.
+Workflows run automatically when changes touch `src/`, `packaging/`, `debian/`, `CMakeLists.txt`, or `resources/`.
 
 ## Usage
 

@@ -1,0 +1,22 @@
+Source: chiriksip
+Section: net
+Priority: optional
+Maintainer: Chirik <chirikrat@gmail.com>
+Build-Depends: debhelper-compat (= 13),
+               cmake (>= 3.20),
+               g++,
+               qt6-base-dev,
+               portaudio19-dev,
+               pkg-config,
+               desktop-file-utils
+Standards-Version: 4.6.0
+Homepage: https://github.com/chirik/ChirikSIP
+
+Package: chiriksip
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: A simple SIP client for KDE Plasma
+ ChirikSIP is a minimal SIP client built with Qt6 and PJSIP.
+ Supports SIP registration, making and receiving calls, audio via
+ PortAudio, phone-style numpad UI, caller name display, setup wizard,
+ system tray with incoming call popup, and settings persistence.

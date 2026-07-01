@@ -1,0 +1,44 @@
+name: Build DEB
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'packaging/**'
+      - 'debian/**'
+      - 'CMakeLists.txt'
+      - 'resources/**'
+      - 'Containerfile.debbuild'
+      - 'build-deb.sh'
+      - '.github/workflows/build-deb.yml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu: ['22.04', '24.04']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+
+      - name: Build DEB for Ubuntu ${{ matrix.ubuntu }}
+        run: |
+          chmod +x build-deb.sh
+          ./build-deb.sh "${{ matrix.ubuntu }}"
+
+      - name: Upload DEB artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: chiriksip-deb-u${{ matrix.ubuntu }}
+          path: build/debs/*.deb

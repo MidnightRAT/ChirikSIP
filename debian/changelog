@@ -1,0 +1,12 @@
+chiriksip (1.0.0-19) unstable; urgency=medium
+
+  * Fixed putFrame empty loop body (restored audio conversion)
+  * Fixed SPSC ring buffer modulo for non-power-of-2 capacity
+  * Fixed EC race condition (both calls in PortAudio thread)
+  * Fixed AudioBridge double-close, PortAudioManager ref leak
+  * Fixed hangup killing all calls (now tracks activeCallId)
+  * Added echo cancellation with configurable aggressiveness
+  * Added SPSC ring buffers, CallManager service layer
+  * Added unit tests, architecture diagram
+
+ -- Chirik <chirikrat@gmail.com>  Tue, 01 Jul 2026 22:00:00 +0300
