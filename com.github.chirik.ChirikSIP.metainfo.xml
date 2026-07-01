@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.github.chirik.ChirikSIP</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <name>ChirikSIP</name>
+  <summary>A minimal SIP client for KDE Plasma</summary>
+  <description>
+    <p>
+      ChirikSIP is a minimal SIP client built with Qt6 and PJSIP.
+      Supports SIP registration, making and receiving calls, audio via
+      PortAudio, phone-style numpad UI, caller name display, setup wizard,
+      system tray with incoming call popup, and settings persistence.
+    </p>
+  </description>
+  <url type="homepage">https://github.com/chirik/ChirikSIP</url>
+  <url type="bugtracker">https://github.com/chirik/ChirikSIP/issues</url>
+  <launchable type="desktop-id">com.github.chirik.ChirikSIP.desktop</launchable>
+  <provides>
+    <binary>chiriksip</binary>
+  </provides>
+  <categories>
+    <category>Network</category>
+    <category>Telephony</category>
+  </categories>
+  <keywords>
+    <keyword>sip</keyword>
+    <keyword>voip</keyword>
+    <keyword>call</keyword>
+    <keyword>phone</keyword>
+  </keywords>
+  <releases>
+    <release version="1.0.0" date="2026-07-01">
+      <description>
+        <p>Initial release with SIP registration and call support.</p>
+      </description>
+    </release>
+  </releases>
+</component>

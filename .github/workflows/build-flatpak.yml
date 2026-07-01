@@ -1,0 +1,33 @@
+name: Build Flatpak
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'packaging/**'
+      - 'CMakeLists.txt'
+      - 'resources/**'
+      - 'com.github.chirik.ChirikSIP.yml'
+      - 'com.github.chirik.ChirikSIP.metainfo.xml'
+      - '.github/workflows/build-flatpak.yml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-flatpak:
+    runs-on: ubuntu-latest
+    container:
+      image: bilelmoussaoui/flatpak-github-actions:freedesktop-23.08
+      options: --privileged
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Flatpak
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          manifest-path: com.github.chirik.ChirikSIP.yml
+          bundle: chiriksip.flatpak
+          cache-key: flatpak-builder-${{ github.sha }}

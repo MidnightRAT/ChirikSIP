@@ -4,6 +4,7 @@ A minimal SIP client for KDE Plasma, built with Qt6 and PJSIP.
 
 ![Build RPM](https://github.com/MidnightRAT/ChirikSIP/actions/workflows/build-rpm.yml/badge.svg)
 ![Build DEB](https://github.com/MidnightRAT/ChirikSIP/actions/workflows/build-deb.yml/badge.svg)
+![Build Flatpak](https://github.com/MidnightRAT/ChirikSIP/actions/workflows/build-flatpak.yml/badge.svg)
 
 ![Linux Main Window](screenshots/Linux_dark_main.png)
 
@@ -182,6 +183,33 @@ Artifacts are saved to `build/debs/`:
 - `--force` — rebuild without Docker/podman cache
 - `-h, --help` — show usage information
 
+## Flatpak Build
+
+### Local Build
+
+Build Flatpak package locally using flatpak-builder.
+
+**Prerequisites:** flatpak and flatpak-builder installed
+
+```bash
+# Build and install
+./build-flatpak.sh
+
+# Or manually
+flatpak-builder --force-clean --install-deps-from=flathub --repo=repo builddir com.github.chirik.ChirikSIP.yml
+flatpak install --user repo com.github.chirik.ChirikSIP
+
+# Run
+flatpak run com.github.chirik.ChirikSIP
+```
+
+### From Flathub
+
+```bash
+flatpak install flathub com.github.chirik.ChirikSIP
+flatpak run com.github.chirik.ChirikSIP
+```
+
 ## CI/CD
 
 GitHub Actions workflows:
@@ -190,6 +218,7 @@ GitHub Actions workflows:
 |----------|---------|----------|--------|
 | `build-rpm.yml` | Push/PR to `main` | Ubuntu (podman) | RPM packages for Fedora 40, 41, 42 |
 | `build-deb.yml` | Push/PR to `main` | Ubuntu (podman) | DEB packages for Ubuntu 22.04, 24.04 |
+| `build-flatpak.yml` | Push/PR to `main` | Ubuntu (CI) | Flatpak bundle |
 | `build-linux.yml` | Push/PR to `main`, `dev-ghaction` | Ubuntu (CI) | src.rpm, cmake build |
 
 Workflows run automatically when changes touch `src/`, `packaging/`, `debian/`, `CMakeLists.txt`, or `resources/`.
