@@ -19,6 +19,7 @@ A minimal SIP client for KDE Plasma and Windows, built with Qt6 and PJSIP.
 - Settings in separate dialog (Ctrl+,)
 - Configurable SIP port (default: 0 = auto-select)
 - Status bar shows current transport port (e.g. UDP:50600)
+- Call duration timer (HH:MM:SS) centered in status bar during calls
 - Auto re-registration when settings change
 - System tray: minimize to tray, only Ctrl+Q exits
 - Incoming call popup when minimized

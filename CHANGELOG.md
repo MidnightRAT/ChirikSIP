@@ -1,3 +1,15 @@
+## 1.0.0-17 (2026-07-01)
+
+### Bug Fixes
+- Removed i686 build from Windows workflow (Qt6 not available for 32-bit in MSYS2)
+- Disabled GitHub Actions workflows for Linux and Windows builds
+
+### Features
+- Clock centered on first display line
+- Setup Wizard accessible from Settings menu
+- About dialog shows build date and time
+- Call duration timer (HH:MM:SS) centered in status bar during calls
+
 ## 1.0.0-16 (2026-07-01)
 
 ### Features

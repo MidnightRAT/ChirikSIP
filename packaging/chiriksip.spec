@@ -1,6 +1,6 @@
 Name:           chiriksip
 Version:        1.0.0
-Release:        16%{?dist}
+Release:        17%{?dist}
 Summary:        A simple SIP client for KDE Plasma
 
 License:        MIT
@@ -53,6 +53,13 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop || :
 %{_datadir}/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
+* Sun Jun 28 2026 Chirik <chirikrat@gmail.com> - 1.0.0-17
+- Removed i686 build from Windows workflow (Qt6 not available for 32-bit)
+- Disabled GitHub Actions workflows for Linux and Windows builds
+- Clock centered on first display line
+- Setup Wizard accessible from Settings menu
+- About dialog shows build date and time
+- Call duration timer centered in status bar during calls
 * Sun Jun 28 2026 Chirik <chirikrat@gmail.com> - 1.0.0-16
 - Clock centered on first display line
 - Setup Wizard accessible from Settings menu
