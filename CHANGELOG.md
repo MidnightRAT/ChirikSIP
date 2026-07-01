@@ -1,3 +1,10 @@
+## 1.0.0-15 (2026-07-01)
+
+### Bug Fixes
+- Fixed audio disappearing when port was set to 0
+- Fixed port label not updating after settings change
+- Port label now shows effective port (5060 when configured as 0)
+
 ## 1.0.0-14 (2026-07-01)
 
 ### Features
