@@ -1,3 +1,11 @@
+## 1.0.0-14 (2026-07-01)
+
+### Features
+- Configurable SIP port in Setup Wizard and Settings dialog (default: 0 = auto-select)
+- Dynamic port selection: port 0 assigns random available port on each launch
+- Status bar shows current transport port (e.g. `UDP:50600`) right-aligned
+- Removed dead code: ensurePortBound() and orphaned makeCall block in sipclient.cpp
+
 ## 1.0.0-12 (2026-06-28)
 
 ### Code Review Fixes

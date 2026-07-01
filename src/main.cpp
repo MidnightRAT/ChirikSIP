@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
         settings.setValue("server", wizard.server());
         settings.setValue("username", wizard.username());
         settings.setValue("password", wizard.password());
+        settings.setValue("port", wizard.port());
         settings.sync();
 
         QFile configFile(settings.fileName());

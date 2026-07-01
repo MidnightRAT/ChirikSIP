@@ -2,6 +2,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
+#include <QSpinBox>
 #include <QStackedWidget>
 #include <QPushButton>
 #include <QLabel>
@@ -70,7 +71,14 @@ void SetupWizard::setupPages()
     m_serverEdit = new QLineEdit(serverPage);
     m_serverEdit->setPlaceholderText("sip.example.com");
     sLayout->addRow("Server:", m_serverEdit);
-    sLayout->addRow("", new QLabel("Enter your SIP server address.\nExample: voip.provider.com", serverPage));
+
+    m_portEdit = new QSpinBox(serverPage);
+    m_portEdit->setRange(0, 65535);
+    m_portEdit->setValue(0);
+    m_portEdit->setSpecialValueText("Auto");
+    sLayout->addRow("Port:", m_portEdit);
+
+    sLayout->addRow("", new QLabel("Enter your SIP server address.\nExample: voip.provider.com\nPort: 0 = auto-select", serverPage));
     m_stack->addWidget(serverPage);
 
     // Page 2: Credentials
@@ -147,3 +155,4 @@ void SetupWizard::onBack()
 QString SetupWizard::server() const { return m_serverEdit->text().trimmed(); }
 QString SetupWizard::username() const { return m_usernameEdit->text().trimmed(); }
 QString SetupWizard::password() const { return m_passwordEdit->text(); }
+int SetupWizard::port() const { return m_portEdit->value(); }

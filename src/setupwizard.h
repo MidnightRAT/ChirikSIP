@@ -6,6 +6,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QLineEdit>
+#include <QSpinBox>
 
 class SetupWizard : public QDialog
 {
@@ -16,6 +17,7 @@ public:
     QString server() const;
     QString username() const;
     QString password() const;
+    int port() const;
 
     static bool isFirstRun();
 
@@ -33,6 +35,7 @@ private:
     QLineEdit *m_serverEdit;
     QLineEdit *m_usernameEdit;
     QLineEdit *m_passwordEdit;
+    QSpinBox *m_portEdit;
 
     int m_currentPage = 0;
     int m_pageCount = 0;

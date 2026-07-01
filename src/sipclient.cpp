@@ -27,7 +27,7 @@ SipClient::~SipClient()
     shutdown();
 }
 
-bool SipClient::init()
+bool SipClient::init(int port)
 {
     if (m_initialized)
         return true;
@@ -75,7 +75,7 @@ bool SipClient::init()
 
     pjsua_transport_config transportCfg;
     pjsua_transport_config_default(&transportCfg);
-    transportCfg.port = SIP_PORT;
+    transportCfg.port = port;
 
     status = pjsua_transport_create(PJSIP_TRANSPORT_UDP, &transportCfg, nullptr);
     if (status != PJ_SUCCESS) {
@@ -83,6 +83,13 @@ bool SipClient::init()
         pjsua_destroy();
         return false;
     }
+
+    unsigned tpCount = 1;
+    pjsua_transport_id tpId;
+    pjsua_enum_transports(&tpId, &tpCount);
+    pjsua_transport_info tpInfo;
+    pjsua_transport_get_info(tpId, &tpInfo);
+    m_boundPort = tpInfo.local_name.port;
 
     status = pjsua_start();
     if (status != PJ_SUCCESS) {
@@ -107,9 +114,11 @@ bool SipClient::init()
     pjsua_set_null_snd_dev();
 
     m_initialized = true;
-    qInfo() << "SIP client initialized";
+    qInfo() << "SIP client initialized on port" << m_boundPort;
     return true;
 }
+
+int SipClient::boundPort() const { return m_boundPort; }
 
 void SipClient::shutdown()
 {
@@ -138,7 +147,8 @@ void SipClient::shutdown()
 
 bool SipClient::registerAccount(const QString &server,
                                  const QString &username,
-                                 const QString &password)
+                                 const QString &password,
+                                 int port)
 {
     if (!m_initialized) {
         qWarning() << "Not initialized";
@@ -191,8 +201,8 @@ bool SipClient::registerAccount(const QString &server,
 
 bool SipClient::makeCall(const QString &uri)
 {
-    if (!m_initialized || m_accId == PJSUA_INVALID_ID) {
-        qWarning() << "Cannot make call: not registered";
+    if (!m_initialized) {
+        qWarning() << "Not initialized";
         return false;
     }
 

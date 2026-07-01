@@ -1,6 +1,6 @@
 Name:           chiriksip
 Version:        1.0.0
-Release:        13%{?dist}
+Release:        14%{?dist}
 Summary:        A simple SIP client for KDE Plasma
 
 License:        MIT
@@ -53,6 +53,11 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop || :
 %{_datadir}/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
+* Tue Jul 01 2026 Chirik <chirik@example.com> - 1.0.0-14
+- Configurable SIP port in Setup Wizard and Settings dialog (default: 0 = auto)
+- Dynamic port selection: port 0 assigns random available port on each launch
+- Status bar shows current transport port (e.g. UDP:50600)
+- Removed dead code: ensurePortBound() and orphaned makeCall block
 * Sun Jun 28 2026 Chirik <chirik@example.com> - 1.0.0-13
 - Deep code review: fixed data races in AudioBridge (memory_order),
   PortAudioManager refcount leak in AudioBridge/Ringtone close/stop,

@@ -18,12 +18,14 @@ public:
     explicit SipClient(QObject *parent = nullptr);
     ~SipClient();
 
-    bool init();
+    bool init(int port = 0);
     void shutdown();
+    int boundPort() const;
 
     bool registerAccount(const QString &server,
                          const QString &username,
-                         const QString &password);
+                         const QString &password,
+                         int port = 0);
     bool makeCall(const QString &uri);
     bool answerCall();
     void hangup();
@@ -42,6 +44,8 @@ private:
     pjsua_acc_id m_accId = PJSUA_INVALID_ID;
     bool m_initialized = false;
     QString m_server;
+    int m_port = 0;
+    int m_boundPort = 0;
     AudioBridge *m_audioBridge = nullptr;
     Ringtone *m_ringtone = nullptr;
     pjsua_call_id m_incomingCallId = PJSUA_INVALID_ID;

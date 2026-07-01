@@ -134,12 +134,19 @@ MainWindow::MainWindow(QWidget *parent)
 
     mainLayout->addStretch();
 
+    QHBoxLayout *statusLayout = new QHBoxLayout();
     m_statusLabel = new QLabel("Not registered", central);
     m_statusLabel->setAlignment(Qt::AlignLeft);
     m_statusLabel->setStyleSheet(STYLE_STATUS_DEFAULT);
-    mainLayout->addWidget(m_statusLabel);
+    m_portLabel = new QLabel(central);
+    m_portLabel->setAlignment(Qt::AlignRight);
+    m_portLabel->setStyleSheet(STYLE_STATUS_OK);
+    statusLayout->addWidget(m_statusLabel);
+    statusLayout->addStretch();
+    statusLayout->addWidget(m_portLabel);
+    mainLayout->addLayout(statusLayout);
 
-    m_sipClient->init();
+    m_sipClient->init(m_port);
 
     if (!m_server.isEmpty() && !m_username.isEmpty()) {
         QTimer::singleShot(100, this, &MainWindow::onRegisterClicked);
@@ -161,6 +168,7 @@ void MainWindow::loadSettings()
     m_server = settings.value("server").toString();
     m_username = settings.value("username").toString();
     m_password = settings.value("password").toString();
+    m_port = settings.value("port", 0).toInt();
 }
 
 void MainWindow::saveSettings()
@@ -169,6 +177,7 @@ void MainWindow::saveSettings()
     settings.setValue("server", m_server);
     settings.setValue("username", m_username);
     settings.setValue("password", m_password);
+    settings.setValue("port", m_port);
     settings.sync();
 
     QFile configFile(settings.fileName());
@@ -387,14 +396,16 @@ void MainWindow::onRegisterClicked()
 
     m_statusLabel->setText("Registering...");
     m_statusLabel->setStyleSheet(STYLE_STATUS_REGISTERING);
-    m_sipClient->registerAccount(m_server, m_username, m_password);
+    m_sipClient->registerAccount(m_server, m_username, m_password, m_port);
 }
 
 void MainWindow::onRegistrationStatus(bool ok, const QString &message)
 {
     if (ok) {
+        int port = m_sipClient->boundPort();
         m_statusLabel->setText("Registered");
         m_statusLabel->setStyleSheet(STYLE_STATUS_OK);
+        m_portLabel->setText(QString("UDP:%1").arg(port));
         m_callBtn->setEnabled(true);
         m_hangupBtn->setEnabled(true);
     } else {
@@ -563,23 +574,27 @@ void MainWindow::onSettings()
     dlg.setServer(m_server);
     dlg.setUsername(m_username);
     dlg.setPassword(m_password);
+    dlg.setPort(m_port);
 
     if (dlg.exec() == QDialog::Accepted) {
         QString newServer = dlg.server();
         QString newUser = dlg.username();
         QString newPass = dlg.password();
+        int newPort = dlg.port();
 
-        bool changed = (newServer != m_server || newUser != m_username || newPass != m_password);
+        bool changed = (newServer != m_server || newUser != m_username ||
+                       newPass != m_password || newPort != m_port);
 
         m_server = newServer;
         m_username = newUser;
         m_password = newPass;
+        m_port = newPort;
         saveSettings();
 
         if (changed && !m_server.isEmpty() && !m_username.isEmpty()) {
             m_statusLabel->setText("Re-registering...");
             m_statusLabel->setStyleSheet(STYLE_STATUS_REGISTERING);
-            m_sipClient->registerAccount(m_server, m_username, m_password);
+            m_sipClient->registerAccount(m_server, m_username, m_password, m_port);
         }
     }
 }

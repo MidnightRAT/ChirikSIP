@@ -62,6 +62,7 @@ private:
     QPushButton *m_callBtn;
     QPushButton *m_hangupBtn;
     QLabel *m_statusLabel;
+    QLabel *m_portLabel;
 
     ScrollHelper *m_scrollHelper;
     QTimer *m_longPressTimer;
@@ -74,6 +75,7 @@ private:
     QString m_server;
     QString m_username;
     QString m_password;
+    int m_port = 0;
 
     CallNotification *m_callNotification = nullptr;
 };
