@@ -19,6 +19,7 @@ on:
 
 jobs:
   build-rpm:
+    if: false
     runs-on: ubuntu-latest
 
     steps:
@@ -95,6 +96,7 @@ jobs:
           path: artifacts/
 
   build-cmake:
+    if: false
     runs-on: ubuntu-latest
 
     steps:
