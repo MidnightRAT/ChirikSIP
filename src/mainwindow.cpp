@@ -574,15 +574,7 @@ void MainWindow::setupTray()
     m_trayIcon->setContextMenu(trayMenu);
     m_trayIcon->setToolTip("ChirikSIP");
 
-    QIcon icon;
-#ifdef Q_OS_WIN
-    QString appDir = QApplication::applicationDirPath();
-    icon = QIcon(appDir + "/chiriksip.ico");
-    if (icon.isNull())
-        icon = QIcon(appDir + "/chiriksip.png");
-#endif
-    if (icon.isNull())
-        icon = QApplication::windowIcon();
+    QIcon icon = QApplication::windowIcon();
     if (icon.isNull())
         icon = QIcon("resources/icons/chiriksip.png");
     m_trayIcon->setIcon(icon);

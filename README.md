@@ -1,6 +1,6 @@
 # ChirikSIP
 
-A minimal SIP client for KDE Plasma and Windows, built with Qt6 and PJSIP.
+A minimal SIP client for KDE Plasma, built with Qt6 and PJSIP.
 
 ![Linux Main Window](screenshots/Linux_dark_main.png)
 
@@ -24,11 +24,10 @@ A minimal SIP client for KDE Plasma and Windows, built with Qt6 and PJSIP.
 - Auto re-registration when settings change
 - System tray: minimize to tray, only Ctrl+Q exits
 - Incoming call popup when minimized
-- Settings persistence (Windows: %APPDATA%/chiriksip/, Linux: ~/.config/chiriksip/)
+- Settings persistence (~/.config/chiriksip/)
 - Auto-registration on startup
 - Keyboard support: 0-9, *, #, +, Enter, Escape, Backspace
 - G.711 A-law (PCMA) and G.711 u-law (PCMU) codecs only
-- Windows cross-compilation support (MinGW32/64)
 - Improved stability: fixed null pointer crashes when no audio device, race conditions in PortAudio threads, data races in ringtone playback, data races in AudioBridge shared buffers (memory_order), PortAudioManager refcount leak, and m_incomingCallId not reset on remote hangup
 - Config file permissions restricted to owner-only (password security)
 - Setup wizard: Enter key triggers Next/Finish button, focus moves to the active input field
@@ -180,10 +179,6 @@ Artifacts are saved to `build/debs/`:
 - `--force` — rebuild without Docker/podman cache
 - `-h, --help` — show usage information
 
-## Cross-Compilation (Windows)
-
-See [CROSS-COMPILE.md](CROSS-COMPILE.md) for MinGW cross-compilation via Docker.
-
 ## CI/CD
 
 GitHub Actions workflows:
@@ -193,7 +188,6 @@ GitHub Actions workflows:
 | `build-rpm.yml` | Push/PR to `main` | Ubuntu (podman) | RPM packages for Fedora 40, 41, 42 |
 | `build-deb.yml` | Push/PR to `main` | Ubuntu (podman) | DEB packages for Ubuntu 22.04, 24.04 |
 | `build-linux.yml` | Push/PR to `main`, `dev-ghaction` | Ubuntu (CI) | src.rpm, cmake build |
-| `build-windows.yml` | Push/PR to `main`, `dev-ghaction` | Windows (MSYS2) | .exe + DLLs |
 
 Workflows run automatically when changes touch `src/`, `packaging/`, `debian/`, `CMakeLists.txt`, or `resources/`.
 

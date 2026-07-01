@@ -11,16 +11,6 @@ static QIcon findAppIcon()
     QIcon icon(":/icons/chiriksip.png");
     if (!icon.isNull()) return icon;
 
-#ifdef Q_OS_WIN
-    QString appDir = QCoreApplication::applicationDirPath();
-    icon = QIcon(appDir + "/chiriksip.ico");
-    if (!icon.isNull()) return icon;
-    icon = QIcon(appDir + "/chiriksip.png");
-    if (!icon.isNull()) return icon;
-    icon = QIcon(appDir + "/resources/icons/chiriksip.png");
-    if (!icon.isNull()) return icon;
-#endif
-
     icon = QIcon("/usr/share/icons/hicolor/256x256/apps/chiriksip.png");
     if (!icon.isNull()) return icon;
 
