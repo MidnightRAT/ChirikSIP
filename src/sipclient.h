@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QString>
+#include <atomic>
 #include <pjlib.h>
 #include <pjmedia.h>
 #include <pjmedia-codec.h>
@@ -29,11 +30,16 @@ public:
     bool makeCall(const QString &uri);
     bool answerCall();
     void hangup();
+    void hangupCall(pjsua_call_id callId);
 
 signals:
     void registrationStatus(bool ok, const QString &message);
     void callStateChanged(int callId, const QString &state);
+    void callMediaActive(int callId, pjsua_conf_port_id confSlot);
     void incomingCall(int callId, const QString &remoteUri);
+
+public slots:
+    void stopRingtone();
 
 private:
     static void onRegState2(pjsua_acc_id accId, pjsua_reg_info *info);
@@ -46,9 +52,9 @@ private:
     QString m_server;
     int m_port = 0;
     int m_boundPort = 0;
-    AudioBridge *m_audioBridge = nullptr;
     Ringtone *m_ringtone = nullptr;
-    pjsua_call_id m_incomingCallId = PJSUA_INVALID_ID;
+    std::atomic<pjsua_call_id> m_incomingCallId{PJSUA_INVALID_ID};
+    std::atomic<pjsua_call_id> m_activeCallId{PJSUA_INVALID_ID};
 };
 
 #endif // SIPCLIENT_H

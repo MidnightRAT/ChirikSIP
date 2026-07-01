@@ -46,7 +46,8 @@ bool SipClient::init(int port)
     cfg.cb.on_call_state = &SipClient::onCallState;
     cfg.cb.on_call_media_state = &SipClient::onCallMediaState;
     cfg.cb.on_incoming_call = &SipClient::onIncomingCall;
-    cfg.user_agent = pj_str(const_cast<char*>("ChirikSIP/" PROJECT_VERSION));
+    static const QByteArray userAgent = QByteArray("ChirikSIP/") + PROJECT_VERSION;
+    cfg.user_agent = pj_str(const_cast<char*>(userAgent.constData()));
 
     pjsua_logging_config logCfg;
     pjsua_logging_config_default(&logCfg);
@@ -122,12 +123,6 @@ void SipClient::shutdown()
     if (!m_initialized)
         return;
 
-    if (m_audioBridge) {
-        m_audioBridge->close();
-        delete m_audioBridge;
-        m_audioBridge = nullptr;
-    }
-
     if (m_ringtone) {
         m_ringtone->stop();
         delete m_ringtone;
@@ -140,6 +135,13 @@ void SipClient::shutdown()
     pj_shutdown();
     m_initialized = false;
     qInfo() << "SIP client shut down";
+}
+
+void SipClient::stopRingtone()
+{
+    if (m_ringtone) {
+        m_ringtone->stop();
+    }
 }
 
 bool SipClient::registerAccount(const QString &server,
@@ -178,8 +180,10 @@ bool SipClient::registerAccount(const QString &server,
     cfg.reg_uri = pj_str(regUri.data());
 
     cfg.cred_count = 1;
-    cfg.cred_info[0].realm = pj_str(const_cast<char*>("*"));
-    cfg.cred_info[0].scheme = pj_str(const_cast<char*>("digest"));
+    static const QByteArray realm("*");
+    static const QByteArray scheme("digest");
+    cfg.cred_info[0].realm = pj_str(const_cast<char*>(realm.constData()));
+    cfg.cred_info[0].scheme = pj_str(const_cast<char*>(scheme.constData()));
     cfg.cred_info[0].username = pj_str(userBa.data());
     cfg.cred_info[0].data_type = PJSIP_CRED_DATA_PLAIN_PASSWD;
     cfg.cred_info[0].data = pj_str(passBa.data());
@@ -239,6 +243,7 @@ bool SipClient::makeCall(const QString &uri)
     }
 
     qInfo() << "Calling" << uri << "callId:" << callId;
+    m_activeCallId = callId;
     return true;
 }
 
@@ -262,6 +267,7 @@ bool SipClient::answerCall()
     if (m_ringtone) {
         m_ringtone->stop();
     }
+    m_activeCallId.store(m_incomingCallId.load());
     m_incomingCallId = PJSUA_INVALID_ID;
     return true;
 }
@@ -275,15 +281,30 @@ void SipClient::hangup()
         m_ringtone->stop();
     }
 
+    pjsua_call_id id = m_activeCallId.load();
+    if (id != PJSUA_INVALID_ID) {
+        pjsua_call_hangup(id, 0, nullptr, nullptr);
+        m_activeCallId = PJSUA_INVALID_ID;
+        qInfo() << "Hung up call" << id;
+        return;
+    }
+
     pjsua_call_id calls[MAX_CALLS];
     unsigned count = MAX_CALLS;
     pjsua_enum_calls(calls, &count);
-
     for (unsigned i = 0; i < count; ++i) {
         pjsua_call_hangup(calls[i], 0, nullptr, nullptr);
     }
-
     qInfo() << "All calls hung up";
+}
+
+void SipClient::hangupCall(pjsua_call_id callId)
+{
+    if (!m_initialized)
+        return;
+    pjsua_call_hangup(callId, 0, nullptr, nullptr);
+    if (callId == m_activeCallId)
+        m_activeCallId = PJSUA_INVALID_ID;
 }
 
 void SipClient::onRegState2(pjsua_acc_id accId, pjsua_reg_info *info)
@@ -334,18 +355,8 @@ void SipClient::onCallState(pjsua_call_id callId, pjsip_event *e)
 
         if (state == "DISCONNECTED") {
             QMetaObject::invokeMethod(self, [self, callId]() {
-                if (self->m_ringtone) {
-                    self->m_ringtone->stop();
-                }
                 if (callId == self->m_incomingCallId) {
                     self->m_incomingCallId = PJSUA_INVALID_ID;
-                }
-                if (self->m_audioBridge) {
-                    qInfo() << "Call ended, closing audio bridge";
-                    AudioBridge *bridge = self->m_audioBridge;
-                    self->m_audioBridge = nullptr;
-                    bridge->close();
-                    bridge->deleteLater();
                 }
             }, Qt::QueuedConnection);
         }
@@ -372,23 +383,7 @@ void SipClient::onCallMediaState(pjsua_call_id callId)
                 pjsua_conf_port_id confSlot = ci.conf_slot;
 
                 QMetaObject::invokeMethod(self, [self, callId, confSlot]() {
-                    if (!self->m_audioBridge) {
-                        self->m_audioBridge = new AudioBridge();
-                        if (!self->m_audioBridge->open()) {
-                            qWarning() << "Audio bridge failed to open";
-                            delete self->m_audioBridge;
-                            self->m_audioBridge = nullptr;
-                        }
-                    }
-
-                    if (self->m_audioBridge && self->m_audioBridge->confSlot() != PJSUA_INVALID_ID) {
-                        pjsua_conf_connect(confSlot, self->m_audioBridge->confSlot());
-                        pjsua_conf_connect(self->m_audioBridge->confSlot(), confSlot);
-                        qInfo() << "Call" << callId << "audio bridged to PortAudio";
-                    } else {
-                        pjsua_conf_connect(confSlot, 0);
-                        pjsua_conf_connect(0, confSlot);
-                    }
+                    emit self->callMediaActive(callId, confSlot);
                 }, Qt::QueuedConnection);
             }
         }

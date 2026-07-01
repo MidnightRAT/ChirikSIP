@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "sipclient.h"
+#include "callmanager.h"
 #include "settingsdialog.h"
 #include "setupwizard.h"
 #include "callnotification.h"
@@ -44,6 +45,7 @@ static const QString STYLE_HANGUP_BTN = QStringLiteral(
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , m_sipClient(new SipClient(this))
+    , m_callManager(new CallManager(m_sipClient, this))
 {
     setWindowTitle("ChirikSIP");
     setMinimumSize(300, 400);
@@ -51,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
     setupMenu();
     setupTray();
     loadSettings();
+    m_callManager->setEchoCancel(m_echoCancel, m_echoAggressiveness);
 
     QWidget *central = new QWidget(this);
     setCentralWidget(central);
@@ -83,9 +86,6 @@ MainWindow::MainWindow(QWidget *parent)
     m_clockTimer = new QTimer(this);
     connect(m_clockTimer, &QTimer::timeout, this, &MainWindow::updateClock);
     m_clockTimer->start(1000);
-
-    m_callDurationTimer = new QTimer(this);
-    connect(m_callDurationTimer, &QTimer::timeout, this, &MainWindow::updateCallDuration);
 
     updateClock();
 
@@ -170,9 +170,11 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     connect(m_callBtn, &QPushButton::clicked, this, &MainWindow::onCallClicked);
-    connect(m_sipClient, &SipClient::registrationStatus, this, &MainWindow::onRegistrationStatus);
-    connect(m_sipClient, &SipClient::callStateChanged, this, &MainWindow::onCallStateChanged);
-    connect(m_sipClient, &SipClient::incomingCall, this, &MainWindow::onIncomingCall);
+    connect(m_callManager, &CallManager::registrationStatus, this, &MainWindow::onRegistrationStatus);
+    connect(m_callManager, &CallManager::callStateChanged, this, &MainWindow::onCallStateChanged);
+    connect(m_callManager, &CallManager::callMediaActive, this, &MainWindow::onCallMediaActive);
+    connect(m_callManager, &CallManager::incomingCall, this, &MainWindow::onIncomingCall);
+    connect(m_callManager, &CallManager::callDurationChanged, this, &MainWindow::onCallDurationChanged);
 }
 
 MainWindow::~MainWindow()
@@ -186,6 +188,8 @@ void MainWindow::loadSettings()
     m_username = settings.value("username").toString();
     m_password = settings.value("password").toString();
     m_port = settings.value("port", 0).toInt();
+    m_echoCancel = settings.value("echoCancel", true).toBool();
+    m_echoAggressiveness = settings.value("echoAggressiveness", 1).toInt();
 }
 
 void MainWindow::saveSettings()
@@ -195,6 +199,8 @@ void MainWindow::saveSettings()
     settings.setValue("username", m_username);
     settings.setValue("password", m_password);
     settings.setValue("port", m_port);
+    settings.setValue("echoCancel", m_echoCancel);
+    settings.setValue("echoAggressiveness", m_echoAggressiveness);
     settings.sync();
 
     QFile configFile(settings.fileName());
@@ -244,15 +250,12 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     }
 
     if (key == Qt::Key_Escape) {
-        if (m_inCall) {
-            m_sipClient->hangup();
-            m_inCall = false;
-            m_incomingWaiting = false;
+        if (m_callManager->isInCall()) {
+            m_callManager->hangup();
             m_callBtn->setEnabled(true);
             m_callBtn->setText("Call");
             m_hangupBtn->setEnabled(true);
             m_scrollHelper->stop();
-            m_callDurationTimer->stop();
             m_callDurationLabel->hide();
             setClockDisplay();
             m_statusLabel->setText("Call ended");
@@ -263,7 +266,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     }
 
     if (key == Qt::Key_Backspace) {
-        if (m_inCall || !m_dialingMode) {
+        if (m_callManager->isInCall() || !m_dialingMode) {
             event->ignore();
             return;
         }
@@ -281,7 +284,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
     QString text = event->text();
     if (!text.isEmpty() && text[0].isPrint()) {
-        if (m_inCall) {
+        if (m_callManager->isInCall()) {
             event->ignore();
             return;
         }
@@ -321,10 +324,21 @@ QString MainWindow::parseDisplayName(const QString &uri)
     return QString();
 }
 
+QString MainWindow::formatDuration(int seconds)
+{
+    int h = seconds / 3600;
+    int m = (seconds % 3600) / 60;
+    int s = seconds % 60;
+    return QString("%1:%2:%3")
+        .arg(h, 2, 10, QChar('0'))
+        .arg(m, 2, 10, QChar('0'))
+        .arg(s, 2, 10, QChar('0'));
+}
+
 void MainWindow::onNumpadClicked()
 {
     QPushButton *btn = qobject_cast<QPushButton *>(sender());
-    if (!btn || m_inCall)
+    if (!btn || m_callManager->isInCall())
         return;
     QString current = m_numberLabel->text();
     if (current.contains(':'))
@@ -336,7 +350,7 @@ void MainWindow::onNumpadClicked()
 
 void MainWindow::onZeroPressed()
 {
-    if (m_inCall) return;
+    if (m_callManager->isInCall()) return;
     QString current = m_numberLabel->text();
     if (current.contains(':'))
         current.clear();
@@ -354,7 +368,7 @@ void MainWindow::onZeroReleased()
 
 void MainWindow::onZeroLongPress()
 {
-    if (m_inCall) return;
+    if (m_callManager->isInCall()) return;
     QString current = m_numberLabel->text();
     if (!current.isEmpty() && current.right(1) == "0") {
         current.chop(1);
@@ -372,8 +386,8 @@ void MainWindow::onHangupReleased()
 {
     if (m_longPressTimer->isActive()) {
         m_longPressTimer->stop();
-        if (m_inCall || m_incomingWaiting) {
-            m_sipClient->hangup();
+        if (m_callManager->isInCall() || m_callManager->isIncomingWaiting()) {
+            m_callManager->hangup();
             m_scrollHelper->stop();
             if (m_callNotification)
                 m_callNotification->hideNotification();
@@ -393,8 +407,8 @@ void MainWindow::onHangupReleased()
 void MainWindow::onHangupLongPress()
 {
     m_longPressFired = true;
-    if (m_inCall || m_incomingWaiting) {
-        m_sipClient->hangup();
+    if (m_callManager->isInCall() || m_callManager->isIncomingWaiting()) {
+        m_callManager->hangup();
         m_scrollHelper->stop();
         if (m_callNotification)
             m_callNotification->hideNotification();
@@ -405,17 +419,12 @@ void MainWindow::onHangupLongPress()
 
 void MainWindow::onCallClicked()
 {
-    if (m_incomingWaiting) {
-        if (m_sipClient->answerCall()) {
-            m_inCall = true;
-            m_incomingWaiting = false;
-            m_dialedNumber = m_numberLabel->text();
+    if (m_callManager->isIncomingWaiting()) {
+        if (m_callManager->answerCall()) {
             m_callBtn->setEnabled(false);
             m_hangupBtn->setEnabled(true);
             m_scrollHelper->stop();
-            m_callDuration = 0;
             m_callDurationLabel->show();
-            m_callDurationTimer->start(1000);
             setCallDisplay();
             m_statusLabel->setText("Call active");
             m_statusLabel->setStyleSheet(STYLE_STATUS_OK_BOLD);
@@ -427,14 +436,11 @@ void MainWindow::onCallClicked()
     if (number.isEmpty())
         return;
 
-    if (m_sipClient->makeCall(number)) {
-        m_inCall = true;
+    if (m_callManager->makeCall(number)) {
         m_dialedNumber = number;
         m_callBtn->setEnabled(false);
         m_hangupBtn->setEnabled(true);
-        m_callDuration = 0;
         m_callDurationLabel->show();
-        m_callDurationTimer->start(1000);
         setCallDisplay();
         m_statusLabel->setText("Calling: " + number);
         m_statusLabel->setStyleSheet(STYLE_STATUS_CONNECTING_BOLD);
@@ -477,15 +483,12 @@ void MainWindow::onCallStateChanged(int callId, const QString &state)
         if (m_callNotification)
             m_callNotification->hideNotification();
     } else if (state == "DISCONNECTED") {
-        m_inCall = false;
-        m_incomingWaiting = false;
         m_callBtn->setEnabled(true);
         m_callBtn->setText("Call");
         m_hangupBtn->setEnabled(true);
-            m_scrollHelper->stop();
-            m_callDurationTimer->stop();
-            m_callDurationLabel->hide();
-            setClockDisplay();
+        m_scrollHelper->stop();
+        m_callDurationLabel->hide();
+        setClockDisplay();
         m_statusLabel->setText("Call ended");
         m_statusLabel->setStyleSheet(STYLE_STATUS_DEFAULT);
         if (m_callNotification)
@@ -496,11 +499,16 @@ void MainWindow::onCallStateChanged(int callId, const QString &state)
     }
 }
 
+void MainWindow::onCallMediaActive(int callId)
+{
+    Q_UNUSED(callId);
+    setCallDisplay();
+}
+
 void MainWindow::onIncomingCall(int callId, const QString &remoteUri)
 {
     Q_UNUSED(callId);
 
-    m_incomingWaiting = true;
     QString number = parseNumber(remoteUri);
     QString name = parseDisplayName(remoteUri);
 
@@ -522,31 +530,26 @@ void MainWindow::onIncomingCall(int callId, const QString &remoteUri)
     m_statusLabel->setStyleSheet(STYLE_STATUS_REGISTERING_BOLD);
 
     if (!isVisible()) {
-        if (!m_callNotification)
+        if (!m_callNotification) {
             m_callNotification = new CallNotification(m_sipClient, this);
 
-        connect(m_callNotification, &CallNotification::accepted, this, [this]() {
-            m_inCall = true;
-            m_incomingWaiting = false;
-            m_dialedNumber = m_numberLabel->text();
-            m_callBtn->setEnabled(false);
-            m_hangupBtn->setEnabled(true);
-            m_scrollHelper->stop();
-            m_callDuration = 0;
-            m_callDurationLabel->show();
-            m_callDurationTimer->start(1000);
-            setCallDisplay();
-            m_statusLabel->setText("Call active");
-            m_statusLabel->setStyleSheet(STYLE_STATUS_OK_BOLD);
-        }, Qt::UniqueConnection);
+            connect(m_callNotification, &CallNotification::accepted, this, [this]() {
+                m_callBtn->setEnabled(false);
+                m_hangupBtn->setEnabled(true);
+                m_scrollHelper->stop();
+                m_callDurationLabel->show();
+                setCallDisplay();
+                m_statusLabel->setText("Call active");
+                m_statusLabel->setStyleSheet(STYLE_STATUS_OK_BOLD);
+            });
 
-        connect(m_callNotification, &CallNotification::rejected, this, [this]() {
-            m_incomingWaiting = false;
-            m_scrollHelper->stop();
-            setClockDisplay();
-            m_statusLabel->setText("Call rejected");
-            m_statusLabel->setStyleSheet(STYLE_STATUS_DEFAULT);
-        }, Qt::UniqueConnection);
+            connect(m_callNotification, &CallNotification::rejected, this, [this]() {
+                m_scrollHelper->stop();
+                setClockDisplay();
+                m_statusLabel->setText("Call rejected");
+                m_statusLabel->setStyleSheet(STYLE_STATUS_DEFAULT);
+            });
+        }
 
         m_callNotification->showNotification(number, name);
     }
@@ -651,21 +654,29 @@ void MainWindow::onSettings()
     dlg.setUsername(m_username);
     dlg.setPassword(m_password);
     dlg.setPort(m_port);
+    dlg.setEchoCancelEnabled(m_echoCancel);
+    dlg.setEchoAggressiveness(m_echoAggressiveness);
 
     if (dlg.exec() == QDialog::Accepted) {
         QString newServer = dlg.server();
         QString newUser = dlg.username();
         QString newPass = dlg.password();
         int newPort = dlg.port();
+        bool newEchoCancel = dlg.echoCancelEnabled();
+        int newEchoAggr = dlg.echoAggressiveness();
 
         bool changed = (newServer != m_server || newUser != m_username ||
-                       newPass != m_password || newPort != m_port);
+                       newPass != m_password || newPort != m_port ||
+                       newEchoCancel != m_echoCancel || newEchoAggr != m_echoAggressiveness);
 
         m_server = newServer;
         m_username = newUser;
         m_password = newPass;
         m_port = newPort;
+        m_echoCancel = newEchoCancel;
+        m_echoAggressiveness = newEchoAggr;
         saveSettings();
+        m_callManager->setEchoCancel(m_echoCancel, m_echoAggressiveness);
 
         m_portLabel->setText(QString("UDP:%1").arg(effectivePort()));
 
@@ -689,34 +700,21 @@ void MainWindow::setCallDisplay()
 {
     m_numberLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     m_numberLabel->setText(m_dialedNumber);
-    int h = m_callDuration / 3600;
-    int m = (m_callDuration % 3600) / 60;
-    int s = m_callDuration % 60;
-    m_nameLabel->setText(QString("%1:%2:%3")
-        .arg(h, 2, 10, QChar('0'))
-        .arg(m, 2, 10, QChar('0'))
-        .arg(s, 2, 10, QChar('0')));
+    m_nameLabel->setText(formatDuration(m_callManager->callDuration()));
 }
 
 void MainWindow::updateClock()
 {
-    if (!m_inCall && !m_incomingWaiting && !m_dialingMode) {
+    if (!m_callManager->isInCall() && !m_callManager->isIncomingWaiting() && !m_dialingMode) {
         m_numberLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
     }
 }
 
-void MainWindow::updateCallDuration()
+void MainWindow::onCallDurationChanged(int seconds)
 {
-    m_callDuration++;
-    int h = m_callDuration / 3600;
-    int m = (m_callDuration % 3600) / 60;
-    int s = m_callDuration % 60;
-    QString duration = QString("%1:%2:%3")
-        .arg(h, 2, 10, QChar('0'))
-        .arg(m, 2, 10, QChar('0'))
-        .arg(s, 2, 10, QChar('0'));
+    QString duration = formatDuration(seconds);
     m_callDurationLabel->setText(duration);
-    if (m_inCall)
+    if (m_callManager->isInCall())
         m_nameLabel->setText(duration);
 }
 

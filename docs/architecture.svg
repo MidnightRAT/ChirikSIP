@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700" font-family="monospace" font-size="11">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#555"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2196F3"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#c62828"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="700" fill="#1a1a2e" rx="8"/>
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" fill="#e0e0e0" font-size="16" font-weight="bold">ChirikSIP Architecture</text>
+
+  <!-- MainWindow -->
+  <rect x="300" y="50" width="280" height="90" rx="6" fill="#2d2d44" stroke="#888" stroke-width="1"/>
+  <text x="440" y="72" text-anchor="middle" fill="#e0e0e0" font-size="13" font-weight="bold">MainWindow</text>
+  <text x="440" y="88" text-anchor="middle" fill="#aaa" font-size="9">QWidget — numpad, display, tray</text>
+  <text x="315" y="105" fill="#888" font-size="8">• Numpad buttons (12)</text>
+  <text x="315" y="115" fill="#888" font-size="8">• m_numberLabel, m_nameLabel</text>
+  <text x="315" y="125" fill="#888" font-size="8">• m_callBtn, m_hangupBtn</text>
+
+  <!-- CallManager -->
+  <rect x="300" y="190" width="280" height="80" rx="6" fill="#2d2d44" stroke="#4CAF50" stroke-width="1.5"/>
+  <text x="440" y="212" text-anchor="middle" fill="#4CAF50" font-size="13" font-weight="bold">CallManager</text>
+  <text x="440" y="228" text-anchor="middle" fill="#aaa" font-size="9">Call lifecycle, AudioBridge owner</text>
+  <text x="315" y="245" fill="#888" font-size="8">• makeCall / answerCall / hangup</text>
+  <text x="315" y="255" fill="#888" font-size="8">• Duration timer, EC config</text>
+
+  <!-- SipClient -->
+  <rect x="300" y="320" width="280" height="80" rx="6" fill="#2d2d44" stroke="#FF9800" stroke-width="1.5"/>
+  <text x="440" y="342" text-anchor="middle" fill="#FF9800" font-size="13" font-weight="bold">SipClient</text>
+  <text x="440" y="358" text-anchor="middle" fill="#aaa" font-size="9">PJSIP transport layer</text>
+  <text x="315" y="375" fill="#888" font-size="8">• registerAccount, makeCall, hangup</text>
+  <text x="315" y="385" fill="#888" font-size="8">• Static callbacks → QueuedConnection</text>
+
+  <!-- AudioBridge -->
+  <rect x="60" y="450" width="280" height="110" rx="6" fill="#2d2d44" stroke="#2196F3" stroke-width="1.5"/>
+  <text x="200" y="472" text-anchor="middle" fill="#2196F3" font-size="13" font-weight="bold">AudioBridge</text>
+  <text x="200" y="488" text-anchor="middle" fill="#aaa" font-size="9">PortAudio ↔ PJSIP bridge</text>
+  <text x="75" y="505" fill="#888" font-size="8">• SPSC Ring Buffers (×3)</text>
+  <text x="75" y="515" fill="#888" font-size="8">  playbackRing, captureRing, ecRefRing</text>
+  <text x="75" y="525" fill="#888" font-size="8">• pjmedia_echo (AEC)</text>
+  <text x="75" y="535" fill="#888" font-size="8">• pjmedia_port (putFrame/getFrame)</text>
+  <text x="75" y="545" fill="#888" font-size="8">• PaStream (paCallback)</text>
+
+  <!-- Ringtone -->
+  <rect x="400" y="450" width="200" height="60" rx="6" fill="#2d2d44" stroke="#e91e63" stroke-width="1"/>
+  <text x="500" y="472" text-anchor="middle" fill="#e91e63" font-size="12" font-weight="bold">Ringtone</text>
+  <text x="500" y="488" text-anchor="middle" fill="#aaa" font-size="9">440Hz sine, own PaStream</text>
+
+  <!-- PortAudioManager -->
+  <rect x="400" y="540" width="200" height="50" rx="6" fill="#2d2d44" stroke="#9c27b0" stroke-width="1"/>
+  <text x="500" y="560" text-anchor="middle" fill="#9c27b0" font-size="12" font-weight="bold">PortAudioManager</text>
+  <text x="500" y="575" text-anchor="middle" fill="#aaa" font-size="8">Ref-counted Pa_Initialize/Terminate</text>
+
+  <!-- CallNotification -->
+  <rect x="60" y="50" width="200" height="60" rx="6" fill="#2d2d44" stroke="#ff9800" stroke-width="1"/>
+  <text x="160" y="72" text-anchor="middle" fill="#ff9800" font-size="12" font-weight="bold">CallNotification</text>
+  <text x="160" y="88" text-anchor="middle" fill="#aaa" font-size="9">Popup QDialog (tray mode)</text>
+
+  <!-- ScrollHelper -->
+  <rect x="620" y="50" width="200" height="45" rx="6" fill="#2d2d44" stroke="#607d8b" stroke-width="1"/>
+  <text x="720" y="70" text-anchor="middle" fill="#607d8b" font-size="12" font-weight="bold">ScrollHelper</text>
+  <text x="720" y="85" text-anchor="middle" fill="#aaa" font-size="8">Smooth text scroll for QLabel</text>
+
+  <!-- SettingsDialog -->
+  <rect x="620" y="115" width="200" height="45" rx="6" fill="#2d2d44" stroke="#607d8b" stroke-width="1"/>
+  <text x="720" y="135" text-anchor="middle" fill="#607d8b" font-size="12" font-weight="bold">SettingsDialog</text>
+  <text x="720" y="150" text-anchor="middle" fill="#aaa" font-size="8">Server, user, pass, EC settings</text>
+
+  <!-- SetupWizard -->
+  <rect x="620" y="175" width="200" height="45" rx="6" fill="#2d2d44" stroke="#607d8b" stroke-width="1"/>
+  <text x="720" y="195" text-anchor="middle" fill="#607d8b" font-size="12" font-weight="bold">SetupWizard</text>
+  <text x="720" y="210" text-anchor="middle" fill="#aaa" font-size="8">First-run SIP account setup</text>
+
+  <!-- PJSIP -->
+  <rect x="60" y="600" width="200" height="50" rx="6" fill="#1a1a2e" stroke="#FF5722" stroke-width="2"/>
+  <text x="160" y="620" text-anchor="middle" fill="#FF5722" font-size="12" font-weight="bold">PJSIP</text>
+  <text x="160" y="635" text-anchor="middle" fill="#aaa" font-size="8">pjsua, conference bridge, codecs</text>
+
+  <!-- PortAudio -->
+  <rect x="300" y="600" width="200" height="50" rx="6" fill="#1a1a2e" stroke="#00BCD4" stroke-width="2"/>
+  <text x="400" y="620" text-anchor="middle" fill="#00BCD4" font-size="12" font-weight="bold">PortAudio</text>
+  <text x="400" y="635" text-anchor="middle" fill="#aaa" font-size="8">ALSA, audio I/O</text>
+
+  <!-- SIP Server -->
+  <rect x="540" y="320" width="160" height="45" rx="6" fill="#1a1a2e" stroke="#f44336" stroke-width="2"/>
+  <text x="620" y="340" text-anchor="middle" fill="#f44336" font-size="12" font-weight="bold">SIP Server</text>
+  <text x="620" y="355" text-anchor="middle" fill="#aaa" font-size="8">voip.domain.com</text>
+
+  <!-- === CONNECTIONS === -->
+
+  <!-- MainWindow → CallManager -->
+  <line x1="440" y1="140" x2="440" y2="190" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="450" y="168" fill="#888" font-size="8">makeCall, answer, hangup</text>
+
+  <!-- MainWindow → SipClient (registration) -->
+  <path d="M 580 95 Q 650 95 650 350 Q 650 380 580 380" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <text x="660" y="230" fill="#888" font-size="8">registerAccount</text>
+
+  <!-- MainWindow → CallNotification -->
+  <line x1="300" y1="80" x2="260" y2="80" stroke="#555" stroke-width="1" marker-end="url(#arrow)"/>
+  <text x="270" y="75" fill="#888" font-size="7">show</text>
+
+  <!-- MainWindow → ScrollHelper -->
+  <line x1="580" y1="65" x2="620" y2="65" stroke="#555" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- CallManager → SipClient -->
+  <line x1="440" y1="270" x2="440" y2="320" stroke="#4CAF50" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+  <text x="450" y="298" fill="#4CAF50" font-size="8">makeCall, answer, hangup</text>
+
+  <!-- SipClient signals → CallManager -->
+  <line x1="420" y1="320" x2="420" y2="270" stroke="#2196F3" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-blue)"/>
+  <text x="370" y="298" fill="#2196F3" font-size="7">signals</text>
+
+  <!-- CallManager → AudioBridge -->
+  <path d="M 380 270 Q 200 300 200 450" fill="none" stroke="#2196F3" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <text x="210" y="370" fill="#2196F3" font-size="8">create/destroy</text>
+
+  <!-- SipClient → PJSIP -->
+  <line x1="400" y1="400" x2="200" y2="600" stroke="#FF5722" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+  <text x="260" y="510" fill="#FF5722" font-size="8">pjsua API</text>
+
+  <!-- AudioBridge → PJSIP -->
+  <line x1="160" y1="560" x2="160" y2="600" stroke="#2196F3" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <text x="100" y="585" fill="#2196F3" font-size="8">conf bridge</text>
+
+  <!-- AudioBridge → PortAudio -->
+  <line x1="240" y1="560" x2="360" y2="600" stroke="#00BCD4" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="320" y="585" fill="#00BCD4" font-size="8">PaStream</text>
+
+  <!-- Ringtone → PortAudio -->
+  <line x1="500" y1="510" x2="450" y2="600" stroke="#e91e63" stroke-width="1" marker-end="url(#arrow)"/>
+  <text x="485" y="560" fill="#e91e63" font-size="8">PaStream</text>
+
+  <!-- Ringtone → PortAudioManager -->
+  <line x1="500" y1="540" x2="500" y2="545" stroke="#9c27b0" stroke-width="1"/>
+
+  <!-- AudioBridge → PortAudioManager -->
+  <path d="M 200 560 Q 200 580 400 580" fill="none" stroke="#9c27b0" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arrow)"/>
+  <text x="290" y="578" fill="#9c27b0" font-size="7">init/term</text>
+
+  <!-- SipClient → SIP Server -->
+  <line x1="580" y1="350" x2="540" y2="350" stroke="#f44336" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+  <text x="555" y="345" fill="#f44336" font-size="8">UDP</text>
+
+  <!-- AudioBridge internal: EC flow -->
+  <rect x="70" y="455" width="260" height="100" rx="4" fill="none" stroke="#2196F3" stroke-width="0.5" stroke-dasharray="2,2"/>
+  <text x="200" y="468" text-anchor="middle" fill="#2196F3" font-size="7">Audio Flow (PortAudio thread)</text>
+  <text x="80" y="560" fill="#555" font-size="7">paCallback ← → ring buffers ← → putFrame/getFrame</text>
+
+  <!-- Thread labels -->
+  <rect x="620" y="400" width="220" height="70" rx="4" fill="#333" stroke="#555" stroke-width="0.5"/>
+  <text x="730" y="418" text-anchor="middle" fill="#e0e0e0" font-size="10" font-weight="bold">Threads</text>
+  <text x="630" y="435" fill="#4CAF50" font-size="8">Qt main — UI, signals</text>
+  <text x="630" y="448" fill="#FF9800" font-size="8">PJSIP — callbacks → QueuedConn</text>
+  <text x="630" y="461" fill="#2196F3" font-size="8">PortAudio — real-time callback</text>
+</svg>

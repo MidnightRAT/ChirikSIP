@@ -6,7 +6,19 @@
 
 static const int SAMPLE_RATE = 8000;
 static const int CHANNELS = 1;
-static const int FRAMES_PER_BUFFER = 160;
+static const int EC_TAIL_MS = 200;
+
+static unsigned ecFlagsFromAggressiveness(int level)
+{
+    unsigned flags = PJMEDIA_ECHO_USE_NOISE_SUPPRESSOR;
+    switch (level) {
+    case 0:  flags |= PJMEDIA_ECHO_AGGRESSIVENESS_CONSERVATIVE; break;
+    case 1:  flags |= PJMEDIA_ECHO_AGGRESSIVENESS_MODERATE; break;
+    case 2:  flags |= PJMEDIA_ECHO_AGGRESSIVENESS_AGGRESSIVE; break;
+    default: flags |= PJMEDIA_ECHO_AGGRESSIVENESS_MODERATE; break;
+    }
+    return flags;
+}
 
 AudioBridge::AudioBridge(QObject *parent)
     : QObject(parent)
@@ -15,10 +27,11 @@ AudioBridge::AudioBridge(QObject *parent)
 
 AudioBridge::~AudioBridge()
 {
-    close();
+    if (m_stream || m_pool)
+        close();
 }
 
-bool AudioBridge::open()
+bool AudioBridge::open(bool echoCancel, int aggressiveness)
 {
     PortAudioManager::initialize();
 
@@ -35,7 +48,7 @@ bool AudioBridge::open()
     }
     inputParams.channelCount = CHANNELS;
     inputParams.sampleFormat = paFloat32;
-    inputParams.suggestedLatency = inputDevInfo->defaultLowInputLatency;
+    inputParams.suggestedLatency = inputDevInfo->defaultLowInputLatency * 4;
     inputParams.hostApiSpecificStreamInfo = nullptr;
 
     PaStreamParameters outputParams;
@@ -51,12 +64,12 @@ bool AudioBridge::open()
     }
     outputParams.channelCount = CHANNELS;
     outputParams.sampleFormat = paFloat32;
-    outputParams.suggestedLatency = outputDevInfo->defaultLowOutputLatency;
+    outputParams.suggestedLatency = outputDevInfo->defaultLowOutputLatency * 4;
     outputParams.hostApiSpecificStreamInfo = nullptr;
 
     PaError err = Pa_OpenStream(&m_stream,
                         &inputParams, &outputParams,
-                        SAMPLE_RATE, FRAMES_PER_BUFFER,
+                        SAMPLE_RATE, FRAME_SIZE,
                         paClipOff, paCallback, this);
     if (err != paNoError) {
         qCritical() << "Pa_OpenStream failed:" << Pa_GetErrorText(err);
@@ -80,6 +93,20 @@ bool AudioBridge::open()
         return false;
     }
 
+    if (echoCancel) {
+        unsigned flags = ecFlagsFromAggressiveness(aggressiveness);
+        pj_status_t ecStatus = pjmedia_echo_create(m_pool, SAMPLE_RATE,
+                                                    FRAME_SIZE, EC_TAIL_MS,
+                                                    0, flags, &m_echoState);
+        if (ecStatus != PJ_SUCCESS) {
+            qWarning() << "Echo canceller creation failed:" << ecStatus << "(continuing without AEC)";
+            m_echoState = nullptr;
+        } else {
+            qInfo() << "Echo canceller created, tail:" << EC_TAIL_MS
+                     << "ms, aggressiveness:" << aggressiveness;
+        }
+    }
+
     m_port = (pjmedia_port *)pj_pool_zalloc(m_pool, sizeof(pjmedia_port));
     if (!m_port) {
         qCritical() << "Failed to allocate port";
@@ -88,12 +115,14 @@ bool AudioBridge::open()
         Pa_StopStream(m_stream);
         Pa_CloseStream(m_stream);
         m_stream = nullptr;
+        PortAudioManager::terminate();
         return false;
     }
 
-    pj_str_t name = pj_str(const_cast<char*>("portaudio"));
+    static const QByteArray portName("portaudio");
+    pj_str_t name = pj_str(const_cast<char*>(portName.constData()));
     pjmedia_port_info_init(&m_port->info, &name, 0x41554442,
-                           SAMPLE_RATE, CHANNELS, 16, FRAMES_PER_BUFFER);
+                           SAMPLE_RATE, CHANNELS, 16, FRAME_SIZE);
     m_port->put_frame = putFrame;
     m_port->get_frame = getFrame;
     m_port->on_destroy = onDestroy;
@@ -108,8 +137,13 @@ bool AudioBridge::open()
         Pa_StopStream(m_stream);
         Pa_CloseStream(m_stream);
         m_stream = nullptr;
+        PortAudioManager::terminate();
         return false;
     }
+
+    m_playbackRing.reset();
+    m_captureRing.reset();
+    m_ecRefRing.reset();
 
     qInfo() << "Audio bridge opened, conf slot:" << m_confSlot;
     return true;
@@ -121,6 +155,11 @@ void AudioBridge::close()
         Pa_StopStream(m_stream);
         Pa_CloseStream(m_stream);
         m_stream = nullptr;
+    }
+
+    if (m_echoState) {
+        pjmedia_echo_destroy(m_echoState);
+        m_echoState = nullptr;
     }
 
     if (m_confSlot != PJSUA_INVALID_ID) {
@@ -148,28 +187,54 @@ int AudioBridge::paCallback(const void *input, void *output,
     Q_UNUSED(statusFlags);
 
     AudioBridge *self = static_cast<AudioBridge *>(userData);
+    if (!self || !output)
+        return paAbort;
+
     const float *in = static_cast<const float *>(input);
     float *out = static_cast<float *>(output);
 
-    if (frameCount > FRAMES_PER_BUFFER)
-        frameCount = FRAMES_PER_BUFFER;
+    if (frameCount > FRAME_SIZE)
+        frameCount = FRAME_SIZE;
 
-    if (input && self->m_captureReady.load(std::memory_order_relaxed)) {
-        std::memcpy(self->m_captureBuffer, in,
-                     frameCount * sizeof(float));
-    }
+    if (input) {
+        float capBuf[FRAME_SIZE];
+        std::memcpy(capBuf, in, frameCount * sizeof(float));
 
-    if (output) {
-        if (self->m_playbackReady.load(std::memory_order_acquire)) {
-            std::memcpy(out, self->m_playbackBuffer,
-                         frameCount * sizeof(float));
-            self->m_playbackReady.store(false, std::memory_order_release);
-        } else {
-            std::memset(out, 0, frameCount * sizeof(float));
+        if (self->m_echoState) {
+            pj_int16_t refI16[FRAME_SIZE];
+            pj_int16_t micI16[FRAME_SIZE];
+            unsigned refCount = frameCount;
+
+            float refFloat[FRAME_SIZE];
+            if (!self->m_ecRefRing.pop(refFloat, refCount))
+                std::memset(refFloat, 0, refCount * sizeof(float));
+
+            for (unsigned i = 0; i < refCount; ++i) {
+                float s = refFloat[i] * 32767.0f;
+                if (s > 32767.0f) s = 32767.0f;
+                if (s < -32768.0f) s = -32768.0f;
+                refI16[i] = (pj_int16_t)s;
+            }
+            for (unsigned i = 0; i < frameCount; ++i) {
+                float s = capBuf[i] * 32767.0f;
+                if (s > 32767.0f) s = 32767.0f;
+                if (s < -32768.0f) s = -32768.0f;
+                micI16[i] = (pj_int16_t)s;
+            }
+
+            pjmedia_echo_playback(self->m_echoState, refI16);
+            pjmedia_echo_capture(self->m_echoState, micI16, 0);
+
+            for (unsigned i = 0; i < frameCount; ++i)
+                capBuf[i] = micI16[i] / 32768.0f;
         }
+
+        self->m_captureRing.push(capBuf, frameCount);
     }
 
-    self->m_captureReady.store(input != nullptr, std::memory_order_release);
+    if (!self->m_playbackRing.pop(out, frameCount))
+        std::memset(out, 0, frameCount * sizeof(float));
+
     return paContinue;
 }
 
@@ -181,13 +246,19 @@ pj_status_t AudioBridge::putFrame(pjmedia_port *port, pjmedia_frame *frame)
 
     const pj_int16_t *samples = (const pj_int16_t *)frame->buf;
     unsigned count = frame->size / sizeof(pj_int16_t);
-    if (count > FRAMES_PER_BUFFER)
-        count = FRAMES_PER_BUFFER;
+    if (count > FRAME_SIZE)
+        count = FRAME_SIZE;
 
-    for (unsigned i = 0; i < count; ++i)
-        self->m_playbackBuffer[i] = samples[i] / 32768.0f;
+    float playBuf[FRAME_SIZE];
+    for (unsigned i = 0; i < count; ++i) {
+        playBuf[i] = samples[i] / 32768.0f;
+        self->m_ecRefBuffer[i] = samples[i];
+    }
 
-    self->m_playbackReady.store(true, std::memory_order_release);
+    if (self->m_echoState)
+        self->m_ecRefRing.push(reinterpret_cast<const float *>(self->m_ecRefBuffer), count);
+
+    self->m_playbackRing.push(playBuf, count);
     return PJ_SUCCESS;
 }
 
@@ -201,12 +272,13 @@ pj_status_t AudioBridge::getFrame(pjmedia_port *port, pjmedia_frame *frame)
 
     pj_int16_t *samples = (pj_int16_t *)frame->buf;
     unsigned count = frame->size / sizeof(pj_int16_t);
-    if (count > FRAMES_PER_BUFFER)
-        count = FRAMES_PER_BUFFER;
+    if (count > FRAME_SIZE)
+        count = FRAME_SIZE;
 
-    if (self->m_captureReady.load(std::memory_order_acquire)) {
+    float capBuf[FRAME_SIZE];
+    if (self->m_captureRing.pop(capBuf, count)) {
         for (unsigned i = 0; i < count; ++i) {
-            float s = self->m_captureBuffer[i] * 32767.0f;
+            float s = capBuf[i] * 32767.0f;
             if (s > 32767.0f) s = 32767.0f;
             if (s < -32768.0f) s = -32768.0f;
             samples[i] = (pj_int16_t)s;

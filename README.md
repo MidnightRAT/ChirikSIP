@@ -12,6 +12,7 @@ A minimal SIP client for KDE Plasma and Windows, built with Qt6 and PJSIP.
 - Outgoing calls (dial by number or SIP URI)
 - Incoming calls with ringtone and Answer button
 - Audio bridge via PortAudio (works with PipeWire/PulseAudio)
+- Echo cancellation via pjmedia_echo (configurable aggressiveness)
 - Phone-style numpad UI (123456789*0#)
 - LCD display with Segment16A digital font
 - Caller name display with scrolling text
@@ -31,6 +32,31 @@ A minimal SIP client for KDE Plasma and Windows, built with Qt6 and PJSIP.
 - Improved stability: fixed null pointer crashes when no audio device, race conditions in PortAudio threads, data races in ringtone playback, data races in AudioBridge shared buffers (memory_order), PortAudioManager refcount leak, and m_incomingCallId not reset on remote hangup
 - Config file permissions restricted to owner-only (password security)
 - Setup wizard: Enter key triggers Next/Finish button, focus moves to the active input field
+
+## Architecture
+
+![Architecture](docs/architecture.svg)
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│  MainWindow  │────►│ CallManager  │────►│  SipClient   │
+│  (Qt UI)     │     │ (lifecycle)  │     │  (PJSIP)     │
+└──────────────┘     └──────┬───────┘     └──────┬───────┘
+                            │                    │
+                     ┌──────▼───────┐     ┌──────▼───────┐
+                     │ AudioBridge  │     │   PJSIP      │
+                     │ (PortAudio)  │     │  conference  │
+                     │  ┌─────────┐ │     │   bridge     │
+                     │  │EC (AEC) │ │     └──────────────┘
+                     │  │×3 rings │ │
+                     │  └─────────┘ │     ┌──────────────┐
+                     └──────────────┘     │  Ringtone    │
+                                          │ (440Hz sine) │
+                     ┌──────────────┐     └──────────────┘
+                     │PortAudioMgr  │
+                     │(ref-counted) │
+                     └──────────────┘
+```
 
 ## Build Dependencies
 

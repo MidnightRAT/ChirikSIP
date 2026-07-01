@@ -89,6 +89,9 @@ int Ringtone::paCallback(const void *input, void *output,
     Q_UNUSED(statusFlags);
 
     Ringtone *self = static_cast<Ringtone *>(userData);
+    if (!self || !output)
+        return paAbort;
+
     float *out = static_cast<float *>(output);
 
     if (!self->m_playing) {

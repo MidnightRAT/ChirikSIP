@@ -1,3 +1,25 @@
+## 1.0.0-19 (2026-07-01)
+
+### Bug Fixes
+- Fixed putFrame empty loop body: restored int16→float conversion for remote audio
+- Fixed SPSC ring buffer: replaced mask-and with modulo for non-power-of-2 capacity
+- Fixed EC race condition: moved pjmedia_echo_playback/capture to same thread (PortAudio callback)
+- Fixed AudioBridge double-close: destructor only calls close() if stream/pool exist
+- Fixed PortAudioManager ref leak in AudioBridge error paths
+- Fixed duplicate CallNotification signal connections on repeated incoming calls
+- Fixed hangup() killing all calls: now tracks activeCallId and hangs up only that one
+- Added null pointer checks in AudioBridge and Ringtone paCallback
+- Added Q_ASSERT for buffer overrun detection in audio callbacks
+
+### Features
+- Echo cancellation via pjmedia_echo with configurable aggressiveness (Conservative/Moderate/Aggressive)
+- SPSC lock-free ring buffers for audio pipeline (16 frames × 160 samples)
+- PortAudio latency increased 4x for smoother audio
+- CallManager service layer between MainWindow and SipClient
+- Call duration displayed centered on second display line during active call
+- Unit tests for parseNumber, parseDisplayName, formatDuration
+- Architecture diagram added to README
+
 ## 1.0.0-18 (2026-07-01)
 
 ### Bug Fixes

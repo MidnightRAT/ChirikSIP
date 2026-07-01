@@ -1,6 +1,6 @@
 Name:           chiriksip
 Version:        1.0.0
-Release:        18%{?dist}
+Release:        19%{?dist}
 Summary:        A simple SIP client for KDE Plasma
 
 License:        MIT
@@ -53,6 +53,15 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop || :
 %{_datadir}/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
+* Wed Jul 01 2026 Chirik <chirikrat@gmail.com> - 1.0.0-19
+- Fixed putFrame empty loop body (restored audio conversion)
+- Fixed SPSC ring buffer modulo for non-power-of-2 capacity
+- Fixed EC race condition (both calls in PortAudio thread)
+- Fixed AudioBridge double-close, PortAudioManager ref leak
+- Fixed hangup killing all calls (now tracks activeCallId)
+- Added echo cancellation with configurable aggressiveness
+- Added SPSC ring buffers, CallManager service layer
+- Added unit tests, architecture diagram
 * Wed Jul 01 2026 Chirik <chirikrat@gmail.com> - 1.0.0-18
 - Fixed audio disappearing after the first call (PortAudio lifecycle)
 - Fixed clock overwriting dialed number while dialing

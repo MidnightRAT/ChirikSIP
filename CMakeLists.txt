@@ -11,6 +11,7 @@ set(APP_SOURCES
     src/settingsdialog.cpp
     src/setupwizard.cpp
     src/sipclient.cpp
+    src/callmanager.cpp
     src/audiobridge.cpp
     src/ringtone.cpp
     src/callnotification.cpp
@@ -84,6 +85,20 @@ endif()
 
 target_compile_definitions(chiriksip PRIVATE PROJECT_VERSION="${PROJECT_VERSION}")
 
+# Debug sanitizers (optional — requires libasan/libubsan)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    include(CheckCXXSourceCompiles)
+    set(CMAKE_REQUIRED_LIBRARIES "-fsanitize=address")
+    check_cxx_source_compiles("int main(){return 0;}" HAS_ASAN)
+    if(HAS_ASAN)
+        target_compile_options(chiriksip PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
+        target_link_options(chiriksip PRIVATE -fsanitize=address,undefined)
+    else()
+        message(WARNING "AddressSanitizer not available, skipping")
+    endif()
+    unset(CMAKE_REQUIRED_LIBRARIES)
+endif()
+
 if(UNIX AND NOT APPLE)
     install(TARGETS chiriksip DESTINATION bin)
     install(FILES resources/chiriksip.desktop DESTINATION share/applications)
@@ -97,3 +112,27 @@ elseif(WIN32)
     install(TARGETS chiriksip DESTINATION .)
     install(FILES resources/icons/chiriksip.png DESTINATION .)
 endif()
+
+# Tests
+find_package(Qt6 REQUIRED COMPONENTS Test)
+set(TEST_SOURCES
+    tests/test_parsing.cpp
+    src/mainwindow.cpp
+    src/settingsdialog.cpp
+    src/setupwizard.cpp
+    src/sipclient.cpp
+    src/callmanager.cpp
+    src/audiobridge.cpp
+    src/ringtone.cpp
+    src/callnotification.cpp
+    src/scrollhelper.cpp
+)
+add_executable(test_parsing ${TEST_SOURCES})
+target_link_libraries(test_parsing PRIVATE
+    Qt6::Core Qt6::Widgets Qt6::Test
+    PkgConfig::PJSIP
+    ${PORTAUDIO_LIBRARIES}
+)
+target_include_directories(test_parsing PRIVATE ${PORTAUDIO_INCLUDE_DIRS} src)
+target_compile_definitions(test_parsing PRIVATE PROJECT_VERSION="${PROJECT_VERSION}")
+add_test(NAME test_parsing COMMAND test_parsing)
