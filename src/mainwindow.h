@@ -41,6 +41,7 @@ private slots:
     void onTrayActivated(QSystemTrayIcon::ActivationReason reason);
     void onTrayRestore();
     void onTrayExit();
+    void updateClock();
 
 private:
     static QString parseNumber(const QString &uri);
@@ -68,6 +69,7 @@ private:
     ScrollHelper *m_scrollHelper;
     QTimer *m_longPressTimer;
     QTimer *m_zeroTimer;
+    QTimer *m_clockTimer;
 
     bool m_inCall = false;
     bool m_incomingWaiting = false;

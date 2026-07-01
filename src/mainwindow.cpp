@@ -15,6 +15,7 @@
 #include <QSystemTrayIcon>
 #include <QApplication>
 #include <QFile>
+#include <QTime>
 
 static const QString STYLE_STATUS_DEFAULT = QStringLiteral("color: gray; padding: 4px; font-size: 11px;");
 static const QString STYLE_STATUS_OK = QStringLiteral("color: #4CAF50; padding: 4px; font-size: 11px;");
@@ -77,6 +78,11 @@ MainWindow::MainWindow(QWidget *parent)
     mainLayout->addWidget(displayWidget);
 
     m_scrollHelper = new ScrollHelper(m_nameLabel, this);
+
+    m_clockTimer = new QTimer(this);
+    connect(m_clockTimer, &QTimer::timeout, this, &MainWindow::updateClock);
+    m_clockTimer->start(1000);
+    updateClock();
 
     QGridLayout *numpad = new QGridLayout();
     numpad->setSpacing(3);
@@ -236,7 +242,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             m_hangupBtn->setEnabled(true);
             m_scrollHelper->stop();
             m_numberLabel->setText("");
-            m_nameLabel->setText("");
+            m_nameLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
             m_statusLabel->setText("Call ended");
             m_statusLabel->setStyleSheet(STYLE_STATUS_DEFAULT);
         }
@@ -433,9 +439,9 @@ void MainWindow::onCallStateChanged(int callId, const QString &state)
         m_callBtn->setEnabled(true);
         m_callBtn->setText("Call");
         m_hangupBtn->setEnabled(true);
-        m_scrollHelper->stop();
-        m_numberLabel->setText("");
-        m_nameLabel->setText("");
+            m_scrollHelper->stop();
+            m_numberLabel->setText("");
+            m_nameLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
         m_statusLabel->setText("Call ended");
         m_statusLabel->setStyleSheet(STYLE_STATUS_DEFAULT);
         if (m_callNotification)
@@ -488,7 +494,7 @@ void MainWindow::onIncomingCall(int callId, const QString &remoteUri)
             m_incomingWaiting = false;
             m_scrollHelper->stop();
             m_numberLabel->setText("");
-            m_nameLabel->setText("");
+            m_nameLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
             m_statusLabel->setText("Call rejected");
             m_statusLabel->setStyleSheet(STYLE_STATUS_DEFAULT);
         }, Qt::UniqueConnection);
@@ -602,6 +608,13 @@ void MainWindow::onSettings()
             m_statusLabel->setStyleSheet(STYLE_STATUS_REGISTERING);
             m_sipClient->registerAccount(m_server, m_username, m_password, m_port);
         }
+    }
+}
+
+void MainWindow::updateClock()
+{
+    if (!m_inCall && !m_incomingWaiting) {
+        m_nameLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
     }
 }
 
