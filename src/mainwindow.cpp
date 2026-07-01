@@ -186,6 +186,11 @@ void MainWindow::saveSettings()
     }
 }
 
+int MainWindow::effectivePort() const
+{
+    return m_port > 0 ? m_port : m_sipClient->boundPort();
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     saveSettings();
@@ -402,10 +407,9 @@ void MainWindow::onRegisterClicked()
 void MainWindow::onRegistrationStatus(bool ok, const QString &message)
 {
     if (ok) {
-        int port = m_sipClient->boundPort();
         m_statusLabel->setText("Registered");
         m_statusLabel->setStyleSheet(STYLE_STATUS_OK);
-        m_portLabel->setText(QString("UDP:%1").arg(port));
+        m_portLabel->setText(QString("UDP:%1").arg(effectivePort()));
         m_callBtn->setEnabled(true);
         m_hangupBtn->setEnabled(true);
     } else {
@@ -590,6 +594,8 @@ void MainWindow::onSettings()
         m_password = newPass;
         m_port = newPort;
         saveSettings();
+
+        m_portLabel->setText(QString("UDP:%1").arg(effectivePort()));
 
         if (changed && !m_server.isEmpty() && !m_username.isEmpty()) {
             m_statusLabel->setText("Re-registering...");

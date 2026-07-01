@@ -50,6 +50,7 @@ private:
     void setupTray();
     void loadSettings();
     void saveSettings();
+    int effectivePort() const;
 
     SipClient *m_sipClient;
 
