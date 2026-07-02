@@ -2,7 +2,7 @@
 
 Name:           chiriksip
 Version:        1.0.0
-Release:        24%{?dist}
+Release:        25%{?dist}
 Summary:        A simple SIP client for KDE Plasma
 
 License:        MIT
@@ -55,6 +55,11 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop || :
 %{_datadir}/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
+* Wed Jul 02 2026 Chirik <chirikrat@gmail.com> - 1.0.0-25
+- Fixed security issues from code review
+- Removed DBus ExportAllSlots (security risk)
+- Fixed Flatpak permissions (own-name, persist instead of filesystem)
+- Fixed owner label visibility when empty
 * Wed Jul 02 2026 Chirik <chirikrat@gmail.com> - 1.0.0-24
 - Added owner number label to status bar (centered, bold, green)
 * Wed Jul 02 2026 Chirik <chirikrat@gmail.com> - 1.0.0-23

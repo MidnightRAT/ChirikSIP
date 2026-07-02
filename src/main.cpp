@@ -42,8 +42,16 @@ int main(int argc, char *argv[])
     app.setWindowIcon(findAppIcon());
 
     QDBusConnection bus = QDBusConnection::sessionBus();
-    if (bus.registerService(dbusService)) {
-    } else {
+    if (!bus.isConnected()) {
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setWindowTitle("ChirikSIP");
+        msgBox.setText("Cannot connect to D-Bus session bus.");
+        msgBox.setInformativeText("Single instance detection is unavailable.");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.setDefaultButton(QMessageBox::Ok);
+        msgBox.exec();
+    } else if (!bus.registerService(dbusService)) {
         QMessageBox msgBox;
         msgBox.setIcon(QMessageBox::Warning);
         msgBox.setWindowTitle("ChirikSIP");
