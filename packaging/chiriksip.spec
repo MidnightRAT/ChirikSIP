@@ -1,6 +1,6 @@
 Name:           chiriksip
 Version:        1.0.0
-Release:        20%{?dist}
+Release:        21%{?dist}
 Summary:        A simple SIP client for KDE Plasma
 
 License:        MIT
@@ -53,6 +53,11 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop || :
 %{_datadir}/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
+* Wed Jul 02 2026 Chirik <chirikrat@gmail.com> - 1.0.0-21
+- Added release publishing to all build workflows
+- Removed legacy build-linux.yml workflow
+- Fixed Flatpak config path to use ~/.config/chiriksip
+- Fixed single instance detection to work across RPM and Flatpak
 * Wed Jul 02 2026 Chirik <chirikrat@gmail.com> - 1.0.0-20
 - Prevent multiple instances of ChirikSIP
 - Added Flatpak build support

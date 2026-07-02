@@ -220,9 +220,8 @@ GitHub Actions workflows:
 | `build-rpm.yml` | Push/PR to `main` | Ubuntu (podman) | RPM packages for Fedora 41, 42, 44 |
 | `build-deb.yml` | Push/PR to `main` | Ubuntu (podman) | DEB packages for Ubuntu 22.04, 24.04 |
 | `build-flatpak.yml` | Push/PR to `main` | Ubuntu (CI) | Flatpak bundle |
-| `build-linux.yml` | Push/PR to `main`, `dev-ghaction` | Ubuntu (CI) | src.rpm, cmake build |
 
-Workflows run automatically when changes touch `src/`, `packaging/`, `debian/`, `CMakeLists.txt`, or `resources/`.
+Workflows run automatically when changes touch `src/`, `packaging/`, `debian/`, `CMakeLists.txt`, or `resources/`. All build artifacts are published to GitHub releases on push to `main`.
 
 ## Usage
 
