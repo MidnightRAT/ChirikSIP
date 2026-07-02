@@ -3,8 +3,13 @@
 #include <QApplication>
 #include <QFile>
 #include <QIcon>
+#include <QLocalServer>
+#include <QLocalSocket>
+#include <QMessageBox>
 #include <QSettings>
 #include <QStandardPaths>
+
+static const QString socketName = "chiriksip-single-instance";
 
 static QIcon findAppIcon()
 {
@@ -26,6 +31,23 @@ int main(int argc, char *argv[])
     QSettings::setDefaultFormat(QSettings::IniFormat);
 
     app.setWindowIcon(findAppIcon());
+
+    QLocalSocket socket;
+    socket.connectToServer(socketName);
+    if (socket.waitForConnected(500)) {
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setWindowTitle("ChirikSIP");
+        msgBox.setText("ChirikSIP is already running.");
+        msgBox.setInformativeText("Only one instance of ChirikSIP can be running at a time.");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.setDefaultButton(QMessageBox::Ok);
+        msgBox.exec();
+        return 0;
+    }
+
+    QLocalServer server;
+    server.listen(socketName);
 
     if (SetupWizard::isFirstRun()) {
         SetupWizard wizard;
