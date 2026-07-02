@@ -13,9 +13,9 @@
 static const QString dbusService = "com.github.chirik.ChirikSIP";
 static const QString dbusPath = "/com/github/chirik/ChirikSIP";
 
-static QString configPath()
+static bool isFlatpak()
 {
-    return QDir::homePath() + "/.config/chiriksip";
+    return QFile::exists("/.flatpak-info");
 }
 
 static QIcon findAppIcon()
@@ -37,9 +37,9 @@ int main(int argc, char *argv[])
     app.setApplicationVersion(PROJECT_VERSION);
     QSettings::setDefaultFormat(QSettings::IniFormat);
 
-    QString configDir = configPath();
-    QDir().mkpath(configDir);
-    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, configDir);
+    if (isFlatpak()) {
+        qputenv("XDG_CONFIG_HOME", QDir::homePath() + "/.config");
+    }
 
     app.setWindowIcon(findAppIcon());
 
