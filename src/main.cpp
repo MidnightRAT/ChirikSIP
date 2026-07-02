@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     QSettings::setDefaultFormat(QSettings::IniFormat);
 
     if (isFlatpak()) {
-        qputenv("XDG_CONFIG_HOME", QDir::homePath() + "/.config");
+        qputenv("XDG_CONFIG_HOME", (QDir::homePath() + "/.config").toUtf8());
     }
 
     app.setWindowIcon(findAppIcon());
