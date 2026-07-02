@@ -1,3 +1,12 @@
+chiriksip (1.0.0-22) unstable; urgency=medium
+
+  * Auto-increment release number on each workflow run
+  * Publish only required artifacts (Fedora 44, Ubuntu 24.04, Flatpak, sources)
+  * Fix Flatpak config path to use ~/.config/chiriksip
+  * Fix single instance detection to work across RPM and Flatpak
+
+ -- Chirik <chirikrat@gmail.com>  Wed, 02 Jul 2026 12:00:00 +0300
+
 chiriksip (1.0.0-21) unstable; urgency=medium
 
   * Added release publishing to all build workflows

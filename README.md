@@ -217,11 +217,11 @@ GitHub Actions workflows:
 
 | Workflow | Trigger | Platform | Output |
 |----------|---------|----------|--------|
-| `build-rpm.yml` | Push/PR to `main` | Ubuntu (podman) | RPM packages for Fedora 41, 42, 44 |
-| `build-deb.yml` | Push/PR to `main` | Ubuntu (podman) | DEB packages for Ubuntu 22.04, 24.04 |
-| `build-flatpak.yml` | Push/PR to `main` | Ubuntu (CI) | Flatpak bundle |
+| `build-rpm.yml` | Push/PR to `main` | Ubuntu (podman) | RPM for Fedora 44 (x86_64 + src) |
+| `build-deb.yml` | Push/PR to `main` | Ubuntu (podman) | DEB for Ubuntu 24.04 |
+| `build-flatpak.yml` | Push/PR to `main` | Ubuntu (CI) | Flatpak bundle + sources |
 
-Workflows run automatically when changes touch `src/`, `packaging/`, `debian/`, `CMakeLists.txt`, or `resources/`. All build artifacts are published to GitHub releases on push to `main`.
+Workflows run automatically when changes touch `src/`, `packaging/`, `debian/`, `CMakeLists.txt`, or `resources/`. Release number auto-increments on each push to `main`. All build artifacts are published to GitHub releases.
 
 ## Usage
 
