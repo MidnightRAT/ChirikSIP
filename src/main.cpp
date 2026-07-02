@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QDBusConnection>
 #include <QDBusError>
+#include <QDir>
 #include <QFile>
 #include <QIcon>
 #include <QMessageBox>
@@ -11,6 +12,11 @@
 
 static const QString dbusService = "com.github.chirik.ChirikSIP";
 static const QString dbusPath = "/com/github/chirik/ChirikSIP";
+
+static QString configPath()
+{
+    return QDir::homePath() + "/.config/chiriksip";
+}
 
 static QIcon findAppIcon()
 {
@@ -30,6 +36,10 @@ int main(int argc, char *argv[])
     app.setApplicationName("chiriksip");
     app.setApplicationVersion(PROJECT_VERSION);
     QSettings::setDefaultFormat(QSettings::IniFormat);
+
+    QString configDir = configPath();
+    QDir().mkpath(configDir);
+    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, configDir);
 
     app.setWindowIcon(findAppIcon());
 
