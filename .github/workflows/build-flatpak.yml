@@ -59,9 +59,10 @@ jobs:
         run: |
           VERSION=$(grep '^Version:' packaging/chiriksip.spec | awk '{print $2}')
           RELEASE=$(grep '^Release:' packaging/chiriksip.spec | grep -o '[0-9]*')
-          tar czf artifacts/chiriksip-${VERSION}-${RELEASE}.tar.gz \
+          tar czf /tmp/chiriksip-${VERSION}-${RELEASE}.tar.gz \
             --transform "s,^,chiriksip-${VERSION}/," \
             -X .rpmignore .
+          mv /tmp/chiriksip-${VERSION}-${RELEASE}.tar.gz artifacts/
 
       - name: Get version
         id: version
