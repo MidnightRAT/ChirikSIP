@@ -60,6 +60,9 @@ jobs:
           path: artifacts
           merge-multiple: true
 
+      - name: Remove debug packages
+        run: rm -f artifacts/*debuginfo*.rpm artifacts/*debugsource*.rpm
+
       - name: Get version
         id: version
         run: echo "version=$(grep '^Version:' packaging/chiriksip.spec | awk '{print $2}')" >> $GITHUB_OUTPUT

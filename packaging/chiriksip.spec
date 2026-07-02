@@ -1,3 +1,5 @@
+%define debug_package %{nil}
+
 Name:           chiriksip
 Version:        1.0.0
 Release:        21%{?dist}

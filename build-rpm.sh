@@ -110,9 +110,10 @@ for FEDORA_VERSION in $VERSIONS; do
             # Build RPMs
             rpmbuild -ba ~/rpmbuild/SPECS/chiriksip.spec
 
-            # Copy artifacts to output volume
+            # Copy artifacts to output volume (exclude debuginfo/debugsource)
             cp ~/rpmbuild/RPMS/*/*.rpm /rpmbuild-output/ 2>/dev/null || true
             cp ~/rpmbuild/SRPMS/*.rpm /rpmbuild-output/ 2>/dev/null || true
+            rm -f /rpmbuild-output/*debuginfo*.rpm /rpmbuild-output/*debugsource*.rpm
         "; then
         echo "ERROR: rpmbuild failed for Fedora $FEDORA_VERSION"
         FAILED_VERSIONS+=("$FEDORA_VERSION")
