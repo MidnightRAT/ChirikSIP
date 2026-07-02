@@ -21,28 +21,29 @@ on:
 jobs:
   build-rpm:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        fedora: ['41', '42', '44']
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Increment release number
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          sed -i 's/^Release:.*$/Release:        '$(($(grep '^Release:' packaging/chiriksip.spec | grep -o '[0-9]*') + 1))'%{?dist}/' packaging/chiriksip.spec
 
       - name: Install podman
         run: |
           sudo apt-get update
           sudo apt-get install -y podman
 
-      - name: Build RPM for Fedora ${{ matrix.fedora }}
+      - name: Build RPM for Fedora 44
         run: |
           chmod +x build-rpm.sh
-          ./build-rpm.sh "${{ matrix.fedora }}"
+          ./build-rpm.sh "44"
 
       - name: Upload RPM artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: chiriksip-rpm-f${{ matrix.fedora }}
+          name: chiriksip-rpm
           path: build/rpms/*.rpm
 
   publish-rpm:
@@ -53,12 +54,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download all RPM artifacts
+      - name: Download RPM artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: chiriksip-rpm-*
+          name: chiriksip-rpm
           path: artifacts
-          merge-multiple: true
 
       - name: Remove debug packages
         run: rm -f artifacts/*debuginfo*.rpm artifacts/*debugsource*.rpm
@@ -71,5 +71,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          files: artifacts/*.rpm
+          files: |
+            artifacts/*x86_64.rpm
+            artifacts/*src.rpm
           fail_on_unmatched_files: false

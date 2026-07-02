@@ -22,10 +22,6 @@ on:
 jobs:
   build-deb:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        ubuntu: ['22.04', '24.04']
 
     steps:
       - uses: actions/checkout@v4
@@ -35,15 +31,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y podman
 
-      - name: Build DEB for Ubuntu ${{ matrix.ubuntu }}
+      - name: Build DEB for Ubuntu 24.04
         run: |
           chmod +x build-deb.sh
-          ./build-deb.sh "${{ matrix.ubuntu }}"
+          ./build-deb.sh "24.04"
 
       - name: Upload DEB artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: chiriksip-deb-u${{ matrix.ubuntu }}
+          name: chiriksip-deb
           path: build/debs/*.deb
 
   publish-deb:
@@ -54,12 +50,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download all DEB artifacts
+      - name: Download DEB artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: chiriksip-deb-*
+          name: chiriksip-deb
           path: artifacts
-          merge-multiple: true
 
       - name: Get version
         id: version
