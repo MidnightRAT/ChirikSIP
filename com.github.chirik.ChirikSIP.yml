@@ -50,9 +50,10 @@ modules:
       - -DCMAKE_INSTALL_PREFIX=/app
       - -DCMAKE_BUILD_TYPE=Release
     post-install:
+      - sed -i 's/Icon=chiriksip/Icon=com.github.chirik.ChirikSIP/' resources/chiriksip.desktop
       - install -Dm644 resources/chiriksip.desktop /app/share/applications/com.github.chirik.ChirikSIP.desktop
       - install -Dm644 com.github.chirik.ChirikSIP.metainfo.xml /app/share/metainfo/com.github.chirik.ChirikSIP.metainfo.xml
-      - install -Dm644 resources/icons/chiriksip.png /app/share/icons/hicolor/256x256/apps/com.github.chirik.ChirikSIP.png
+      - install -Dm644 resources/icons/chiriksip.png /app/share/icons/hicolor/512x512/apps/com.github.chirik.ChirikSIP.png
       - install -Dm644 resources/icons/128x128/chiriksip.png /app/share/icons/hicolor/128x128/apps/com.github.chirik.ChirikSIP.png
       - install -Dm644 resources/icons/64x64/chiriksip.png /app/share/icons/hicolor/64x64/apps/com.github.chirik.ChirikSIP.png
       - install -Dm644 resources/icons/48x48/chiriksip.png /app/share/icons/hicolor/48x48/apps/com.github.chirik.ChirikSIP.png
