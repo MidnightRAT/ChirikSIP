@@ -1,15 +1,16 @@
 #include "mainwindow.h"
 #include "setupwizard.h"
 #include <QApplication>
+#include <QDBusConnection>
+#include <QDBusError>
 #include <QFile>
 #include <QIcon>
-#include <QLocalServer>
-#include <QLocalSocket>
 #include <QMessageBox>
 #include <QSettings>
 #include <QStandardPaths>
 
-static const QString socketName = "chiriksip-single-instance";
+static const QString dbusService = "com.github.chirik.ChirikSIP";
+static const QString dbusPath = "/com/github/chirik/ChirikSIP";
 
 static QIcon findAppIcon()
 {
@@ -32,9 +33,10 @@ int main(int argc, char *argv[])
 
     app.setWindowIcon(findAppIcon());
 
-    QLocalSocket socket;
-    socket.connectToServer(socketName);
-    if (socket.waitForConnected(500)) {
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    if (bus.registerService(dbusService)) {
+        bus.registerObject(dbusPath, &app, QDBusConnection::ExportAllSlots);
+    } else {
         QMessageBox msgBox;
         msgBox.setIcon(QMessageBox::Warning);
         msgBox.setWindowTitle("ChirikSIP");
@@ -45,9 +47,6 @@ int main(int argc, char *argv[])
         msgBox.exec();
         return 0;
     }
-
-    QLocalServer server;
-    server.listen(socketName);
 
     if (SetupWizard::isFirstRun()) {
         SetupWizard wizard;

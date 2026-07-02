@@ -20,13 +20,13 @@ set(APP_SOURCES
 
 add_executable(chiriksip ${APP_SOURCES})
 
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets DBus)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(PJSIP REQUIRED IMPORTED_TARGET libpjproject)
 pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
 target_link_libraries(chiriksip PRIVATE
-    Qt6::Core Qt6::Widgets Qt6::Network
+    Qt6::Core Qt6::Widgets Qt6::DBus
     PkgConfig::PJSIP
     ${PORTAUDIO_LIBRARIES}
 )
