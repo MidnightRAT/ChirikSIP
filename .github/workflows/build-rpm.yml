@@ -25,11 +25,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Increment release number
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          sed -i 's/^Release:.*$/Release:        '$(($(grep '^Release:' packaging/chiriksip.spec | grep -o '[0-9]*') + 1))'%{?dist}/' packaging/chiriksip.spec
-
       - name: Install podman
         run: |
           sudo apt-get update
