@@ -31,3 +31,34 @@ jobs:
           manifest-path: com.github.chirik.ChirikSIP.yml
           bundle: chiriksip.flatpak
           cache-key: flatpak-builder-${{ github.sha }}
+
+      - name: Upload Flatpak artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chiriksip-flatpak
+          path: chiriksip.flatpak
+
+  publish-flatpak:
+    needs: build-flatpak
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Flatpak artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: chiriksip-flatpak
+          path: artifacts
+
+      - name: Get version
+        id: version
+        run: echo "version=$(grep '^Version:' packaging/chiriksip.spec | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+      - name: Publish to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          files: artifacts/*.flatpak
+          fail_on_unmatched_files: false
