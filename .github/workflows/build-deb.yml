@@ -58,7 +58,7 @@ jobs:
 
       - name: Get version
         id: version
-        run: echo "version=$(grep '^Version:' packaging/chiriksip.spec | awk '{print $2}')" >> $GITHUB_OUTPUT
+        run: echo "version=$(head -1 debian/changelog | grep -oP '\(\\K[^)]+' | head -1 | cut -d- -f1)" >> $GITHUB_OUTPUT
 
       - name: Publish to release
         uses: softprops/action-gh-release@v2

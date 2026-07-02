@@ -1,3 +1,9 @@
+chiriksip (1.0.0-24) unstable; urgency=medium
+
+  * Added owner number label to status bar (centered, bold, green)
+
+ -- Chirik <chirikrat@gmail.com>  Wed, 02 Jul 2026 16:00:00 +0300
+
 chiriksip (1.0.0-23) unstable; urgency=medium
 
   * Removed auto-increment release number from workflow

@@ -28,8 +28,8 @@ Usage: $0 [OPTIONS] [VERSIONS]
 Build ChirikSIP RPMs inside Fedora containers.
 
 Arguments:
-  VERSIONS    Space-separated Fedora versions (default: 42)
-              Example: $0 "36 37 38 39 40 41 42"
+  VERSIONS    Space-separated Fedora versions (default: 44)
+              Example: $0 "41 42 44"
 
 Options:
   -f, --force       Force rebuild (no cache)

@@ -2,7 +2,6 @@
 #include "setupwizard.h"
 #include <QApplication>
 #include <QDBusConnection>
-#include <QDBusError>
 #include <QDir>
 #include <QFile>
 #include <QIcon>
@@ -11,7 +10,6 @@
 #include <QStandardPaths>
 
 static const QString dbusService = "com.github.chirik.ChirikSIP";
-static const QString dbusPath = "/com/github/chirik/ChirikSIP";
 
 static bool isFlatpak()
 {
@@ -45,7 +43,6 @@ int main(int argc, char *argv[])
 
     QDBusConnection bus = QDBusConnection::sessionBus();
     if (bus.registerService(dbusService)) {
-        bus.registerObject(dbusPath, &app, QDBusConnection::ExportAllSlots);
     } else {
         QMessageBox msgBox;
         msgBox.setIcon(QMessageBox::Warning);

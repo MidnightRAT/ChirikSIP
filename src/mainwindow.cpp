@@ -156,6 +156,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_ownerLabel = new QLabel(central);
     m_ownerLabel->setAlignment(Qt::AlignCenter);
     m_ownerLabel->setStyleSheet(STYLE_STATUS_OK_BOLD);
+    m_ownerLabel->hide();
     m_portLabel = new QLabel(central);
     m_portLabel->setAlignment(Qt::AlignRight);
     m_portLabel->setStyleSheet(STYLE_STATUS_OK);
@@ -198,6 +199,7 @@ void MainWindow::loadSettings()
 
     if (!m_username.isEmpty()) {
         m_ownerLabel->setText(m_username);
+        m_ownerLabel->show();
     }
 }
 
@@ -636,6 +638,7 @@ void MainWindow::setupMenu()
             m_port = wizard.port();
             saveSettings();
             m_ownerLabel->setText(m_username);
+            m_ownerLabel->show();
             if (!m_server.isEmpty() && !m_username.isEmpty()) {
                 m_statusLabel->setText("Re-registering...");
                 m_statusLabel->setStyleSheet(STYLE_STATUS_REGISTERING);
@@ -682,6 +685,11 @@ void MainWindow::onSettings()
 
         m_portLabel->setText(QString("UDP:%1").arg(effectivePort()));
         m_ownerLabel->setText(m_username);
+        if (!m_username.isEmpty()) {
+            m_ownerLabel->show();
+        } else {
+            m_ownerLabel->hide();
+        }
 
         if (changed && !m_server.isEmpty() && !m_username.isEmpty()) {
             m_statusLabel->setText("Re-registering...");
