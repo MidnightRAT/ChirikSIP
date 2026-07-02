@@ -197,7 +197,7 @@ void MainWindow::loadSettings()
     m_echoCancel = settings.value("echoCancel", true).toBool();
     m_echoAggressiveness = settings.value("echoAggressiveness", 1).toInt();
 
-    if (!m_username.isEmpty()) {
+    if (!m_username.isEmpty() && m_ownerLabel) {
         m_ownerLabel->setText(m_username);
         m_ownerLabel->show();
     }

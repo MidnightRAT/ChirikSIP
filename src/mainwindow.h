@@ -65,15 +65,15 @@ private:
     QSystemTrayIcon *m_trayIcon = nullptr;
     bool m_forceQuit = false;
 
-    QLabel *m_numberLabel;
-    QLabel *m_nameLabel;
-    QPushButton *m_numpad[12];
-    QPushButton *m_callBtn;
-    QPushButton *m_hangupBtn;
-    QLabel *m_statusLabel;
-    QLabel *m_callDurationLabel;
-    QLabel *m_ownerLabel;
-    QLabel *m_portLabel;
+    QLabel *m_numberLabel = nullptr;
+    QLabel *m_nameLabel = nullptr;
+    QPushButton *m_numpad[12] = {};
+    QPushButton *m_callBtn = nullptr;
+    QPushButton *m_hangupBtn = nullptr;
+    QLabel *m_statusLabel = nullptr;
+    QLabel *m_callDurationLabel = nullptr;
+    QLabel *m_ownerLabel = nullptr;
+    QLabel *m_portLabel = nullptr;
 
     ScrollHelper *m_scrollHelper;
     QTimer *m_longPressTimer;
