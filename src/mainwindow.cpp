@@ -478,6 +478,10 @@ void MainWindow::onRegistrationStatus(bool ok, const QString &message)
         m_portLabel->setText(QString("UDP:%1").arg(effectivePort()));
         m_callBtn->setEnabled(true);
         m_hangupBtn->setEnabled(true);
+        if (!m_username.isEmpty()) {
+            m_ownerLabel->setText(m_username);
+            m_ownerLabel->show();
+        }
     } else {
         m_statusLabel->setText(message);
         m_statusLabel->setStyleSheet(STYLE_STATUS_ERROR);
@@ -502,6 +506,10 @@ void MainWindow::onCallStateChanged(int callId, const QString &state)
         setClockDisplay();
         m_statusLabel->setText("Call ended");
         m_statusLabel->setStyleSheet(STYLE_STATUS_DEFAULT);
+        if (!m_username.isEmpty()) {
+            m_ownerLabel->setText(m_username);
+            m_ownerLabel->show();
+        }
         if (m_callNotification)
             m_callNotification->hideNotification();
     } else if (state == "CALLING" || state == "EARLY" || state == "CONNECTING") {
