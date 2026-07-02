@@ -17,7 +17,7 @@ else
 fi
 
 # Defaults
-VERSIONS="42"
+VERSIONS="44"
 FORCE_BUILD=false
 INSTALL_RPMFUSION=false
 
@@ -37,8 +37,8 @@ Options:
   -h, --help        Show this help
 
 Examples:
-  $0                         # Build for Fedora 42 only
-  $0 "40 41 42"             # Build for F40-F42
+  $0                         # Build for Fedora 44 only
+  $0 "41 42 44"             # Build for F41-F44
   $0 --rpmfusion "36 37 38" # Build with rpmfusion for older Fedora
 EOF
     exit 0

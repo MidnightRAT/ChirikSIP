@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        fedora: ['40', '41', '42']
+        fedora: ['41', '42', '44']
 
     steps:
       - uses: actions/checkout@v4
