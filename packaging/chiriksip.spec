@@ -2,7 +2,7 @@
 
 Name:           chiriksip
 Version:        1.0.0
-Release:        22%{?dist}
+Release:        23%{?dist}
 Summary:        A simple SIP client for KDE Plasma
 
 License:        MIT
@@ -55,6 +55,8 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop || :
 %{_datadir}/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
+* Wed Jul 02 2026 Chirik <chirikrat@gmail.com> - 1.0.0-23
+- Removed auto-increment release number from workflow
 * Wed Jul 02 2026 Chirik <chirikrat@gmail.com> - 1.0.0-22
 - Auto-increment release number on each workflow run
 - Publish only required artifacts (Fedora 44, Ubuntu 24.04, Flatpak, sources)

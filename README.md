@@ -221,7 +221,7 @@ GitHub Actions workflows:
 | `build-deb.yml` | Push/PR to `main` | Ubuntu (podman) | DEB for Ubuntu 24.04 |
 | `build-flatpak.yml` | Push/PR to `main` | Ubuntu (CI) | Flatpak bundle + sources |
 
-Workflows run automatically when changes touch `src/`, `packaging/`, `debian/`, `CMakeLists.txt`, or `resources/`. Release number auto-increments on each push to `main`. All build artifacts are published to GitHub releases.
+Workflows run automatically when changes touch `src/`, `packaging/`, `debian/`, `CMakeLists.txt`, or `resources/`. All build artifacts are published to GitHub releases on push to `main`.
 
 ## Usage
 

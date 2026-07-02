@@ -1,3 +1,9 @@
+chiriksip (1.0.0-23) unstable; urgency=medium
+
+  * Removed auto-increment release number from workflow
+
+ -- Chirik <chirikrat@gmail.com>  Wed, 02 Jul 2026 14:00:00 +0300
+
 chiriksip (1.0.0-22) unstable; urgency=medium
 
   * Auto-increment release number on each workflow run
