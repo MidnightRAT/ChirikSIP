@@ -72,6 +72,7 @@ private:
     QPushButton *m_hangupBtn;
     QLabel *m_statusLabel;
     QLabel *m_callDurationLabel;
+    QLabel *m_ownerLabel;
     QLabel *m_portLabel;
 
     ScrollHelper *m_scrollHelper;

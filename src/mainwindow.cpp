@@ -153,12 +153,17 @@ MainWindow::MainWindow(QWidget *parent)
     m_callDurationLabel->setAlignment(Qt::AlignCenter);
     m_callDurationLabel->setStyleSheet(STYLE_STATUS_OK);
     m_callDurationLabel->hide();
+    m_ownerLabel = new QLabel(central);
+    m_ownerLabel->setAlignment(Qt::AlignCenter);
+    m_ownerLabel->setStyleSheet(STYLE_STATUS_OK_BOLD);
     m_portLabel = new QLabel(central);
     m_portLabel->setAlignment(Qt::AlignRight);
     m_portLabel->setStyleSheet(STYLE_STATUS_OK);
     statusLayout->addWidget(m_statusLabel);
     statusLayout->addStretch();
     statusLayout->addWidget(m_callDurationLabel);
+    statusLayout->addStretch();
+    statusLayout->addWidget(m_ownerLabel);
     statusLayout->addStretch();
     statusLayout->addWidget(m_portLabel);
     mainLayout->addLayout(statusLayout);
@@ -190,6 +195,10 @@ void MainWindow::loadSettings()
     m_port = settings.value("port", 0).toInt();
     m_echoCancel = settings.value("echoCancel", true).toBool();
     m_echoAggressiveness = settings.value("echoAggressiveness", 1).toInt();
+
+    if (!m_username.isEmpty()) {
+        m_ownerLabel->setText(m_username);
+    }
 }
 
 void MainWindow::saveSettings()
@@ -626,6 +635,7 @@ void MainWindow::setupMenu()
             m_password = wizard.password();
             m_port = wizard.port();
             saveSettings();
+            m_ownerLabel->setText(m_username);
             if (!m_server.isEmpty() && !m_username.isEmpty()) {
                 m_statusLabel->setText("Re-registering...");
                 m_statusLabel->setStyleSheet(STYLE_STATUS_REGISTERING);
@@ -671,6 +681,7 @@ void MainWindow::onSettings()
         m_callManager->setEchoCancel(m_echoCancel, m_echoAggressiveness);
 
         m_portLabel->setText(QString("UDP:%1").arg(effectivePort()));
+        m_ownerLabel->setText(m_username);
 
         if (changed && !m_server.isEmpty() && !m_username.isEmpty()) {
             m_statusLabel->setText("Re-registering...");
