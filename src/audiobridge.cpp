@@ -250,13 +250,14 @@ pj_status_t AudioBridge::putFrame(pjmedia_port *port, pjmedia_frame *frame)
         count = FRAME_SIZE;
 
     float playBuf[FRAME_SIZE];
+    float ecRefFloat[FRAME_SIZE];
     for (unsigned i = 0; i < count; ++i) {
         playBuf[i] = samples[i] / 32768.0f;
-        self->m_ecRefBuffer[i] = samples[i];
+        ecRefFloat[i] = samples[i] / 32768.0f;
     }
 
     if (self->m_echoState)
-        self->m_ecRefRing.push(reinterpret_cast<const float *>(self->m_ecRefBuffer), count);
+        self->m_ecRefRing.push(ecRefFloat, count);
 
     self->m_playbackRing.push(playBuf, count);
     return PJ_SUCCESS;

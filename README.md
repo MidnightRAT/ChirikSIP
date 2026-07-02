@@ -37,6 +37,8 @@ A minimal SIP client for KDE Plasma, built with Qt6 and PJSIP.
 - Improved stability: fixed null pointer crashes when no audio device, race conditions in PortAudio threads, data races in ringtone playback, data races in AudioBridge shared buffers (memory_order), PortAudioManager refcount leak, and m_incomingCallId not reset on remote hangup
 - Config file permissions restricted to owner-only (password security)
 - Setup wizard: Enter key triggers Next/Finish button, focus moves to the active input field
+- Password obfuscation: stored as base64 (not encryption — use system keyring for real security)
+- Auto-migration: plaintext passwords re-encoded to base64 on first load
 
 ## Architecture
 

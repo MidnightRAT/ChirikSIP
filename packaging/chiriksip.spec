@@ -1,8 +1,8 @@
 %define debug_package %{nil}
 
 Name:           chiriksip
-Version:        1.0.0
-Release:        25%{?dist}
+Version:        1.0.1
+Release:        1%{?dist}
 Summary:        A simple SIP client for KDE Plasma
 
 License:        MIT
@@ -55,6 +55,13 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop || :
 %{_datadir}/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
+* Wed Jul 02 2026 Chirik <chirikrat@gmail.com> - 1.0.1-1
+- Fixed echo cancellation reference buffer normalization
+- Fixed crash: added shutdown() in MainWindow destructor
+- Fixed registration concurrency guard and thread safety
+- Password obfuscation with base64 (not encryption)
+- Auto-migration of plaintext passwords to base64
+- Removed debug fprintf calls, reverted PJSIP log level to 4
 * Wed Jul 02 2026 Chirik <chirikrat@gmail.com> - 1.0.0-25
 - Fixed security issues from code review
 - Removed DBus ExportAllSlots (security risk)

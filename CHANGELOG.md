@@ -1,3 +1,19 @@
+## 1.0.1 (2026-07-02)
+
+### Bug Fixes
+- Fixed echo cancellation reference buffer: normalized int16→float [-1,1] for correct speexdsp processing
+- Fixed crash: added m_sipClient->shutdown() in MainWindow destructor
+- Fixed m_registering not reset on all error paths in registerAccount()
+- Fixed thread safety: atomic load of m_incomingCallId in answerCall()
+- Reverted PJSIP console_level from 6 back to 4 (reduced log noise)
+- Removed debug fprintf(stderr) calls left from development (15+ occurrences)
+- Fixed m_accId deletion error handling: pjsua_acc_del failure no longer crashes
+
+### Features
+- Password obfuscation: stored as base64 with "b64:" prefix (not encryption)
+- Auto-migration: plaintext passwords automatically re-encoded to base64 on load
+- Registration concurrency guard: prevents parallel registration attempts
+
 ## 1.0.0-19 (2026-07-01)
 
 ### Bug Fixes

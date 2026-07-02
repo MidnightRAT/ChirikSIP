@@ -71,7 +71,8 @@ int main(int argc, char *argv[])
         QSettings settings;
         settings.setValue("server", wizard.server());
         settings.setValue("username", wizard.username());
-        settings.setValue("password", wizard.password());
+        // base64 obfuscation only — not encryption
+        settings.setValue("password", "b64:" + QString::fromUtf8(wizard.password().toUtf8().toBase64()));
         settings.setValue("port", wizard.port());
         settings.sync();
 

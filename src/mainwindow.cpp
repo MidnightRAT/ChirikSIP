@@ -185,6 +185,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    m_sipClient->shutdown();
 }
 
 void MainWindow::loadSettings()
@@ -192,7 +193,19 @@ void MainWindow::loadSettings()
     QSettings settings;
     m_server = settings.value("server").toString();
     m_username = settings.value("username").toString();
-    m_password = settings.value("password").toString();
+    // NOTE: base64 is obfuscation only, not encryption. Anyone with file access
+    // can decode it. For real security, use system keyring (KWallet, SecretService).
+    QString storedPassword = settings.value("password", QString()).toString();
+    if (storedPassword.startsWith("b64:")) {
+        m_password = QString::fromUtf8(QByteArray::fromBase64(storedPassword.mid(4).toUtf8()));
+    } else {
+        // Migrate plaintext password to base64 on next save
+        m_password = storedPassword;
+        if (!m_password.isEmpty()) {
+            settings.setValue("password", "b64:" + QString::fromUtf8(m_password.toUtf8().toBase64()));
+            settings.sync();
+        }
+    }
     m_port = settings.value("port", 0).toInt();
     m_echoCancel = settings.value("echoCancel", true).toBool();
     m_echoAggressiveness = settings.value("echoAggressiveness", 1).toInt();
@@ -208,7 +221,7 @@ void MainWindow::saveSettings()
     QSettings settings;
     settings.setValue("server", m_server);
     settings.setValue("username", m_username);
-    settings.setValue("password", m_password);
+    settings.setValue("password", "b64:" + QString::fromUtf8(m_password.toUtf8().toBase64()));
     settings.setValue("port", m_port);
     settings.setValue("echoCancel", m_echoCancel);
     settings.setValue("echoAggressiveness", m_echoAggressiveness);

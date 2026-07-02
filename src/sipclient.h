@@ -49,6 +49,7 @@ private:
 
     pjsua_acc_id m_accId = PJSUA_INVALID_ID;
     bool m_initialized = false;
+    bool m_registering = false;
     QString m_server;
     int m_port = 0;
     int m_boundPort = 0;

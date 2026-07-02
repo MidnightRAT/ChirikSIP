@@ -85,7 +85,6 @@ private:
     SpscRingBuffer m_playbackRing;
     SpscRingBuffer m_captureRing;
     SpscRingBuffer m_ecRefRing;
-    pj_int16_t m_ecRefBuffer[FRAME_SIZE];
 
     pjmedia_echo_state *m_echoState = nullptr;
 };

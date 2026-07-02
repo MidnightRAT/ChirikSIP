@@ -123,6 +123,8 @@ void SipClient::shutdown()
     if (!m_initialized)
         return;
 
+    m_registering = false;
+
     if (m_ringtone) {
         m_ringtone->stop();
         delete m_ringtone;
@@ -159,8 +161,18 @@ bool SipClient::registerAccount(const QString &server,
         return false;
     }
 
+    if (m_registering) {
+        qWarning() << "Registration already in progress";
+        return false;
+    }
+
+    m_registering = true;
+
     if (m_accId != PJSUA_INVALID_ID) {
-        pjsua_acc_del(m_accId);
+        pj_status_t delStatus = pjsua_acc_del(m_accId);
+        if (delStatus != PJ_SUCCESS) {
+            qWarning() << "pjsua_acc_del failed:" << delStatus << "(continuing with new account)";
+        }
         m_accId = PJSUA_INVALID_ID;
     }
 
@@ -191,6 +203,7 @@ bool SipClient::registerAccount(const QString &server,
     pj_status_t status = pjsua_acc_add(&cfg, PJ_TRUE, &m_accId);
     if (status != PJ_SUCCESS) {
         qCritical() << "Account add failed:" << status;
+        m_registering = false;
         emit registrationStatus(false, QString("Registration failed: %1").arg(status));
         return false;
     }
@@ -249,7 +262,8 @@ bool SipClient::makeCall(const QString &uri)
 
 bool SipClient::answerCall()
 {
-    if (m_incomingCallId == PJSUA_INVALID_ID) {
+    pjsua_call_id callId = m_incomingCallId.load();
+    if (callId == PJSUA_INVALID_ID) {
         qWarning() << "No incoming call to answer";
         return false;
     }
@@ -257,17 +271,17 @@ bool SipClient::answerCall()
     pjsua_call_setting callCfg;
     pjsua_call_setting_default(&callCfg);
 
-    pj_status_t status = pjsua_call_answer2(m_incomingCallId, &callCfg, 200, nullptr, nullptr);
+    pj_status_t status = pjsua_call_answer2(callId, &callCfg, 200, nullptr, nullptr);
     if (status != PJ_SUCCESS) {
         qCritical() << "Answer call failed:" << status;
         return false;
     }
 
-    qInfo() << "Answering call" << m_incomingCallId;
+    qInfo() << "Answering call" << callId;
     if (m_ringtone) {
         m_ringtone->stop();
     }
-    m_activeCallId.store(m_incomingCallId.load());
+    m_activeCallId.store(callId);
     m_incomingCallId = PJSUA_INVALID_ID;
     return true;
 }
@@ -309,7 +323,10 @@ void SipClient::hangupCall(pjsua_call_id callId)
 
 void SipClient::onRegState2(pjsua_acc_id accId, pjsua_reg_info *info)
 {
-    if (!info || !info->cbparam) return;
+    if (!info || !info->cbparam) {
+        qWarning() << "onRegState2: null info or cbparam";
+        return;
+    }
 
     bool ok = (info->cbparam->code / 100) == 2;
     QString msg = QString("Registration %1 (code %2)")
@@ -321,6 +338,7 @@ void SipClient::onRegState2(pjsua_acc_id accId, pjsua_reg_info *info)
     SipClient *self = static_cast<SipClient *>(pjsua_acc_get_user_data(accId));
     if (self) {
         QMetaObject::invokeMethod(self, [self, ok, msg]() {
+            self->m_registering = false;
             emit self->registrationStatus(ok, msg);
         }, Qt::QueuedConnection);
     }
