@@ -5,6 +5,7 @@
 #include "setupwizard.h"
 #include "callnotification.h"
 #include "scrollhelper.h"
+#include "audiodevicemanager.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -18,6 +19,8 @@
 #include <QApplication>
 #include <QFile>
 #include <QTime>
+#include <QAudioDevice>
+#include <QMediaDevices>
 
 static const QString STYLE_STATUS_DEFAULT = QStringLiteral("color: gray; padding: 4px; font-size: 11px;");
 static const QString STYLE_STATUS_OK = QStringLiteral("color: #4CAF50; padding: 4px; font-size: 11px;");
@@ -144,6 +147,40 @@ MainWindow::MainWindow(QWidget *parent)
     mainLayout->addLayout(actionLayout);
 
     mainLayout->addStretch();
+
+    // Device selection combos
+    QHBoxLayout *deviceLayout = new QHBoxLayout();
+    m_inputDeviceCombo = new QComboBox(central);
+    m_outputDeviceCombo = new QComboBox(central);
+    m_inputDeviceCombo->setToolTip("Microphone");
+    m_outputDeviceCombo->setToolTip("Speakers");
+
+    const auto inputs = AudioDeviceManager::instance().audioInputs();
+    for (const QAudioDevice &dev : inputs)
+        m_inputDeviceCombo->addItem(dev.description(), QVariant::fromValue(dev));
+
+    const auto outputs = AudioDeviceManager::instance().audioOutputs();
+    for (const QAudioDevice &dev : outputs)
+        m_outputDeviceCombo->addItem(dev.description(), QVariant::fromValue(dev));
+
+    QAudioDevice curIn = AudioDeviceManager::instance().currentInputDevice();
+    QAudioDevice curOut = AudioDeviceManager::instance().currentOutputDevice();
+    setInputComboDevice(curIn);
+    setOutputComboDevice(curOut);
+
+    connect(m_inputDeviceCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::onInputDeviceChanged);
+    connect(m_outputDeviceCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::onOutputDeviceChanged);
+
+    connect(&AudioDeviceManager::instance(), &AudioDeviceManager::deviceListChanged,
+            this, &MainWindow::rebuildTrayDeviceMenus);
+
+    deviceLayout->addWidget(new QLabel("Mic:", central));
+    deviceLayout->addWidget(m_inputDeviceCombo);
+    deviceLayout->addWidget(new QLabel("Spk:", central));
+    deviceLayout->addWidget(m_outputDeviceCombo);
+    mainLayout->addLayout(deviceLayout);
 
     QHBoxLayout *statusLayout = new QHBoxLayout();
     m_statusLabel = new QLabel("Not registered", central);
@@ -602,6 +639,12 @@ void MainWindow::setupTray()
     QAction *exitAction = trayMenu->addAction("Exit");
     connect(exitAction, &QAction::triggered, this, &MainWindow::onTrayExit);
 
+    trayMenu->addSeparator();
+
+    m_inputDeviceMenu = trayMenu->addMenu("Input Device");
+    m_outputDeviceMenu = trayMenu->addMenu("Output Device");
+    rebuildTrayDeviceMenus();
+
     m_trayIcon = new QSystemTrayIcon(this);
     m_trayIcon->setContextMenu(trayMenu);
     m_trayIcon->setToolTip("ChirikSIP");
@@ -682,6 +725,8 @@ void MainWindow::onSettings()
     dlg.setPort(m_port);
     dlg.setEchoCancelEnabled(m_echoCancel);
     dlg.setEchoAggressiveness(m_echoAggressiveness);
+    dlg.setInputDevice(AudioDeviceManager::instance().currentInputDevice());
+    dlg.setOutputDevice(AudioDeviceManager::instance().currentOutputDevice());
 
     if (dlg.exec() == QDialog::Accepted) {
         QString newServer = dlg.server();
@@ -701,6 +746,8 @@ void MainWindow::onSettings()
         m_port = newPort;
         m_echoCancel = newEchoCancel;
         m_echoAggressiveness = newEchoAggr;
+        AudioDeviceManager::instance().setInputDevice(dlg.selectedInputDevice());
+        AudioDeviceManager::instance().setOutputDevice(dlg.selectedOutputDevice());
         saveSettings();
         m_callManager->setEchoCancel(m_echoCancel, m_echoAggressiveness);
 
@@ -748,6 +795,83 @@ void MainWindow::onCallDurationChanged(int seconds)
     m_callDurationLabel->setText(duration);
     if (m_callManager->isInCall())
         m_nameLabel->setText(duration);
+}
+
+void MainWindow::rebuildTrayDeviceMenus()
+{
+    if (!m_inputDeviceMenu || !m_outputDeviceMenu)
+        return;
+
+    m_inputDeviceMenu->clear();
+    m_outputDeviceMenu->clear();
+
+    QAudioDevice curIn = AudioDeviceManager::instance().currentInputDevice();
+    const auto inputs = AudioDeviceManager::instance().audioInputs();
+    for (const QAudioDevice &dev : inputs) {
+        QAction *action = m_inputDeviceMenu->addAction(dev.description());
+        action->setCheckable(true);
+        action->setChecked(dev.id() == curIn.id());
+        action->setData(QVariant::fromValue(dev));
+        connect(action, &QAction::triggered, this, &MainWindow::onInputDeviceActionTriggered);
+    }
+
+    QAudioDevice curOut = AudioDeviceManager::instance().currentOutputDevice();
+    const auto outputs = AudioDeviceManager::instance().audioOutputs();
+    for (const QAudioDevice &dev : outputs) {
+        QAction *action = m_outputDeviceMenu->addAction(dev.description());
+        action->setCheckable(true);
+        action->setChecked(dev.id() == curOut.id());
+        action->setData(QVariant::fromValue(dev));
+        connect(action, &QAction::triggered, this, &MainWindow::onOutputDeviceActionTriggered);
+    }
+}
+
+void MainWindow::onInputDeviceActionTriggered()
+{
+    QAction *action = qobject_cast<QAction *>(sender());
+    if (action)
+        AudioDeviceManager::instance().setInputDevice(action->data().value<QAudioDevice>());
+}
+
+void MainWindow::onOutputDeviceActionTriggered()
+{
+    QAction *action = qobject_cast<QAction *>(sender());
+    if (action)
+        AudioDeviceManager::instance().setOutputDevice(action->data().value<QAudioDevice>());
+}
+
+void MainWindow::onInputDeviceChanged(int index)
+{
+    if (index < 0) return;
+    QAudioDevice dev = m_inputDeviceCombo->itemData(index).value<QAudioDevice>();
+    AudioDeviceManager::instance().setInputDevice(dev);
+}
+
+void MainWindow::onOutputDeviceChanged(int index)
+{
+    if (index < 0) return;
+    QAudioDevice dev = m_outputDeviceCombo->itemData(index).value<QAudioDevice>();
+    AudioDeviceManager::instance().setOutputDevice(dev);
+}
+
+void MainWindow::setInputComboDevice(const QAudioDevice &device)
+{
+    for (int i = 0; i < m_inputDeviceCombo->count(); ++i) {
+        if (m_inputDeviceCombo->itemData(i).value<QAudioDevice>().id() == device.id()) {
+            m_inputDeviceCombo->setCurrentIndex(i);
+            return;
+        }
+    }
+}
+
+void MainWindow::setOutputComboDevice(const QAudioDevice &device)
+{
+    for (int i = 0; i < m_outputDeviceCombo->count(); ++i) {
+        if (m_outputDeviceCombo->itemData(i).value<QAudioDevice>().id() == device.id()) {
+            m_outputDeviceCombo->setCurrentIndex(i);
+            return;
+        }
+    }
 }
 
 void MainWindow::onAbout()

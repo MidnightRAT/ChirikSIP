@@ -6,11 +6,15 @@
 #include <QLabel>
 #include <QTimer>
 #include <QSystemTrayIcon>
+#include <QComboBox>
+#include <QAudioDevice>
+#include <QMenu>
 
 class SipClient;
 class CallManager;
 class CallNotification;
 class ScrollHelper;
+class AudioDeviceManager;
 
 class MainWindow : public QMainWindow
 {
@@ -50,6 +54,12 @@ private slots:
     void onTrayExit();
     void updateClock();
 
+    void onInputDeviceChanged(int index);
+    void onOutputDeviceChanged(int index);
+    void rebuildTrayDeviceMenus();
+    void onInputDeviceActionTriggered();
+    void onOutputDeviceActionTriggered();
+
 private:
     void setupMenu();
     void setupTray();
@@ -58,6 +68,8 @@ private:
     int effectivePort() const;
     void setClockDisplay();
     void setCallDisplay();
+    void setInputComboDevice(const QAudioDevice &device);
+    void setOutputComboDevice(const QAudioDevice &device);
 
     SipClient *m_sipClient;
     CallManager *m_callManager;
@@ -92,6 +104,11 @@ private:
     int m_echoAggressiveness = 1;
 
     CallNotification *m_callNotification = nullptr;
+
+    QComboBox *m_inputDeviceCombo = nullptr;
+    QComboBox *m_outputDeviceCombo = nullptr;
+    QMenu *m_inputDeviceMenu = nullptr;
+    QMenu *m_outputDeviceMenu = nullptr;
 };
 
 #endif // MAINWINDOW_H
