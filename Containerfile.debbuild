@@ -13,7 +13,7 @@ RUN apt-get update \
         qt6-base-dev \
         libqt6opengl6-dev \
         libgl-dev \
-        portaudio19-dev \
+        qtmultimedia5-dev \
         desktop-file-utils \
         devscripts \
         debhelper \

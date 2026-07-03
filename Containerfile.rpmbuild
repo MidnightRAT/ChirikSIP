@@ -21,8 +21,8 @@ RUN dnf upgrade -y \
         gcc-c++ \
         hicolor-icon-theme \
         pkgconfig \
-        portaudio-devel \
         qt6-qtbase-devel \
+        qt6-qtmultimedia-devel \
         pjproject-devel \
         gsm-devel \
         speex-devel \
