@@ -55,6 +55,9 @@ install(FILES resources/icons/64x64/chiriksip.png DESTINATION share/icons/hicolo
 install(FILES resources/icons/48x48/chiriksip.png DESTINATION share/icons/hicolor/48x48/apps)
 install(FILES resources/icons/32x32/chiriksip.png DESTINATION share/icons/hicolor/32x32/apps)
 install(FILES resources/icons/16x16/chiriksip.png DESTINATION share/icons/hicolor/16x16/apps)
+install(FILES resources/icons/128x128/phone.png DESTINATION share/icons/hicolor/128x128/apps)
+install(FILES resources/icons/128x128/settings.png DESTINATION share/icons/hicolor/128x128/apps)
+install(FILES resources/icons/128x128/nightrat.png DESTINATION share/icons/hicolor/128x128/apps)
 
 # Tests
 find_package(Qt6 REQUIRED COMPONENTS Test)

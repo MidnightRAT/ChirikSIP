@@ -2,5 +2,8 @@
     <qresource prefix="/">
         <file alias="icons/chiriksip.png">resources/icons/chiriksip.png</file>
         <file alias="icons/chiriksip.ico">windows/chiriksip.ico</file>
+        <file alias="icons/phone.png">resources/icons/128x128/phone.png</file>
+        <file alias="icons/settings.png">resources/icons/128x128/settings.png</file>
+        <file alias="icons/nightrat.png">resources/icons/128x128/nightrat.png</file>
     </qresource>
 </RCC>

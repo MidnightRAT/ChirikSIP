@@ -9,13 +9,14 @@
 #include <QSettings>
 #include <QFile>
 #include <QApplication>
+#include <QIcon>
 
 SetupWizard::SetupWizard(QWidget *parent)
     : QDialog(parent)
 {
     setWindowTitle("ChirikSIP Setup");
     setFixedSize(400, 320);
-    setWindowIcon(QApplication::windowIcon());
+    setWindowIcon(QIcon(":/icons/settings.png"));
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
 

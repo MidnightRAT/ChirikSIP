@@ -18,13 +18,13 @@ static bool isFlatpak()
 
 static QIcon findAppIcon()
 {
-    QIcon icon(":/icons/chiriksip.png");
+    QIcon icon(":/icons/phone.png");
     if (!icon.isNull()) return icon;
 
     icon = QIcon("/usr/share/icons/hicolor/256x256/apps/chiriksip.png");
     if (!icon.isNull()) return icon;
 
-    return QIcon("resources/icons/chiriksip.png");
+    return QIcon("resources/icons/128x128/phone.png");
 }
 
 int main(int argc, char *argv[])

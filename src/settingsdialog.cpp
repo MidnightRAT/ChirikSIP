@@ -8,13 +8,14 @@
 #include <QApplication>
 #include <QAudioDevice>
 #include <QMediaDevices>
+#include <QIcon>
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent)
 {
     setWindowTitle("Settings");
     setMinimumWidth(300);
-    setWindowIcon(QApplication::windowIcon());
+    setWindowIcon(QIcon(":/icons/settings.png"));
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
 

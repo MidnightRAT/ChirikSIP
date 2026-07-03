@@ -876,11 +876,14 @@ void MainWindow::setOutputComboDevice(const QAudioDevice &device)
 
 void MainWindow::onAbout()
 {
-    QMessageBox::about(this, "About ChirikSIP",
-        "<h2>ChirikSIP</h2>"
+    QMessageBox msgBox(this);
+    msgBox.setWindowTitle("About ChirikSIP");
+    msgBox.setIconPixmap(QPixmap(":/icons/nightrat.png").scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    msgBox.setText("<h2>ChirikSIP</h2>"
         "<p>Version " + QApplication::applicationVersion() + "</p>"
         "<p>Build: " __DATE__ " " __TIME__ "</p>"
         "<p>A simple SIP client for KDE Plasma.</p>"
         "<p>Built with Qt6 and PJSIP.</p>"
         "<p>License: MIT</p>");
+    msgBox.exec();
 }
