@@ -55,15 +55,6 @@ jobs:
           name: chiriksip-flatpak
           path: artifacts
 
-      - name: Create source tarball
-        run: |
-          VERSION=$(grep '^Version:' packaging/chiriksip.spec | awk '{print $2}')
-          RELEASE=$(grep '^Release:' packaging/chiriksip.spec | grep -o '[0-9]*')
-          tar czf /tmp/chiriksip-${VERSION}-${RELEASE}.tar.gz \
-            --transform "s,^,chiriksip-${VERSION}/," \
-            -X .rpmignore .
-          mv /tmp/chiriksip-${VERSION}-${RELEASE}.tar.gz artifacts/
-
       - name: Get version
         id: version
         run: echo "version=$(grep '^Version:' packaging/chiriksip.spec | awk '{print $2}')" >> $GITHUB_OUTPUT
@@ -72,7 +63,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          files: |
-            artifacts/*.flatpak
-            artifacts/*.tar.gz
+          files: artifacts/*.flatpak
           fail_on_unmatched_files: false

@@ -271,9 +271,9 @@ GitHub Actions — автоматична збірка та публікація
 
 | Workflow | Тригери | Платформа | Артефакти |
 |----------|---------|-----------|-----------|
-| `build-rpm.yml` | push/PR → `main` | Ubuntu + podman | RPM для Fedora 43, 44 (x86_64 + src) |
+| `build-rpm.yml` | push/PR → `main` | Ubuntu + podman | RPM для Fedora 43, 44 (x86_64) |
 | `build-deb.yml` | push/PR → `main` | Ubuntu + podman | DEB для Ubuntu 22.04, 24.04 |
-| `build-flatpak.yml` | push/PR → `main` | flatpak-github-actions | Flatpak bundle + source tarball |
+| `build-flatpak.yml` | push/PR → `main` | flatpak-github-actions | Flatpak bundle |
 
 Тригери: зміни в `src/`, `packaging/`, `debian/`, `CMakeLists.txt`, `resources/`, відповідних workflow-файлах.
 

@@ -70,7 +70,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          files: |
-            artifacts/*x86_64.rpm
-            artifacts/*src.rpm
+          files: artifacts/*x86_64.rpm
           fail_on_unmatched_files: false

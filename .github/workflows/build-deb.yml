@@ -22,6 +22,9 @@ on:
 jobs:
   build-deb:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ubuntu: ['22.04', '24.04']
 
     steps:
       - uses: actions/checkout@v4
@@ -31,15 +34,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y podman
 
-      - name: Build DEB for Ubuntu 22.04 and 24.04
+      - name: Build DEB for Ubuntu ${{ matrix.ubuntu }}
         run: |
           chmod +x build-deb.sh
-          ./build-deb.sh "22.04 24.04"
+          ./build-deb.sh "${{ matrix.ubuntu }}"
 
       - name: Upload DEB artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: chiriksip-deb
+          name: chiriksip-deb-u${{ matrix.ubuntu }}
           path: build/debs/*.deb
 
   publish-deb:
@@ -50,15 +53,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download DEB artifacts
+      - name: Download all DEB artifacts
         uses: actions/download-artifact@v4
         with:
-          name: chiriksip-deb
+          pattern: chiriksip-deb-u*
           path: artifacts
+          merge-multiple: true
 
       - name: Get version
         id: version
-        run: echo "version=$(head -1 debian/changelog | grep -oP '\(\\K[^)]+' | head -1 | cut -d- -f1)" >> $GITHUB_OUTPUT
+        run: echo "version=$(grep '^Version:' packaging/chiriksip.spec | awk '{print $2}')" >> $GITHUB_OUTPUT
 
       - name: Publish to release
         uses: softprops/action-gh-release@v2
