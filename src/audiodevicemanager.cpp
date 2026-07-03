@@ -3,10 +3,11 @@
 
 AudioDeviceManager::AudioDeviceManager(QObject *parent)
     : QObject(parent)
+    , m_mediaDevices(new QMediaDevices(this))
 {
-    connect(&QMediaDevices::instance(), &QMediaDevices::audioInputsChanged,
+    connect(m_mediaDevices, &QMediaDevices::audioInputsChanged,
             this, &AudioDeviceManager::deviceListChanged);
-    connect(&QMediaDevices::instance(), &QMediaDevices::audioOutputsChanged,
+    connect(m_mediaDevices, &QMediaDevices::audioOutputsChanged,
             this, &AudioDeviceManager::deviceListChanged);
     connect(this, &AudioDeviceManager::deviceListChanged,
             this, &AudioDeviceManager::onDeviceListChanged);

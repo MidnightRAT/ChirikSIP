@@ -5,6 +5,7 @@
 #include "audiodevicemanager.h"
 #include <QDebug>
 #include <QAudioFormat>
+#include <QTimer>
 #include <cmath>
 #include <cstring>
 

@@ -161,8 +161,8 @@ void AudioBridge::startAudio()
         return;
     }
 
-    qInfo() << "Audio started with input:" << m_source->device().description()
-            << "output:" << m_sink->device().description();
+    qInfo() << "Audio started with input:" << inputDev.description()
+            << "output:" << outputDev.description();
 }
 
 void AudioBridge::stopAudio()

@@ -37,6 +37,7 @@ private:
     QAudioDevice fallbackDevice(bool isInput) const;
 
     QSettings m_settings;
+    QMediaDevices *m_mediaDevices;
 };
 
 #endif // AUDIODEVICEMANAGER_H
