@@ -2,8 +2,9 @@
 #define RINGTONE_H
 
 #include <QObject>
+#include <QAudioSink>
+#include <QIODevice>
 #include <atomic>
-#include <portaudio.h>
 
 class Ringtone : public QObject
 {
@@ -15,14 +16,12 @@ public:
     void start();
     void stop();
 
-private:
-    static int paCallback(const void *input, void *output,
-                          unsigned long frameCount,
-                          const PaStreamCallbackTimeInfo *timeInfo,
-                          PaStreamCallbackFlags statusFlags,
-                          void *userData);
+private slots:
+    void onAudioDataReady();
 
-    PaStream *m_stream = nullptr;
+private:
+    QAudioSink *m_sink = nullptr;
+    QIODevice *m_device = nullptr;
     std::atomic<bool> m_playing{false};
     std::atomic<unsigned> m_phase{0};
 };

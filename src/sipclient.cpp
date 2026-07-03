@@ -1,7 +1,6 @@
 #include "sipclient.h"
 #include "audiobridge.h"
 #include "ringtone.h"
-#include "portaudio_manager.h"
 #include <QDebug>
 #include <QMetaObject>
 #include <QRegularExpression>
@@ -109,8 +108,6 @@ bool SipClient::init(int port)
 
     pjsua_set_null_snd_dev();
 
-    PortAudioManager::initialize();
-
     m_initialized = true;
     qInfo() << "SIP client initialized on port" << m_boundPort;
     return true;
@@ -132,7 +129,6 @@ void SipClient::shutdown()
     }
 
     QThread::msleep(50);
-    PortAudioManager::terminate();
     pjsua_destroy();
     pj_shutdown();
     m_initialized = false;
