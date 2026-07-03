@@ -13,6 +13,7 @@ set(APP_SOURCES
     src/sipclient.cpp
     src/callmanager.cpp
     src/audiobridge.cpp
+    src/audiodevicemanager.cpp
     src/ringtone.cpp
     src/callnotification.cpp
     src/scrollhelper.cpp
@@ -65,6 +66,7 @@ set(TEST_SOURCES
     src/sipclient.cpp
     src/callmanager.cpp
     src/audiobridge.cpp
+    src/audiodevicemanager.cpp
     src/ringtone.cpp
     src/callnotification.cpp
     src/scrollhelper.cpp
