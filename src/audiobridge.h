@@ -2,11 +2,14 @@
 #define AUDIOBRIDGE_H
 
 #include <QObject>
+#include <QAudioSink>
+#include <QAudioSource>
+#include <QAudioDevice>
+#include <QIODevice>
 #include <atomic>
 #include <pjmedia.h>
 #include <pjmedia/echo.h>
 #include <pjsua.h>
-#include <portaudio.h>
 
 static const int FRAME_SIZE = 160;
 static const int RING_CAPACITY = 16;
@@ -66,18 +69,26 @@ public:
     pjmedia_port *port() const { return m_port; }
     pjsua_conf_port_id confSlot() const { return m_confSlot; }
 
-private:
-    static int paCallback(const void *input, void *output,
-                          unsigned long frameCount,
-                          const PaStreamCallbackTimeInfo *timeInfo,
-                          PaStreamCallbackFlags statusFlags,
-                          void *userData);
+signals:
+    void deviceChanged();
 
+private slots:
+    void onInputDeviceChanged(const QAudioDevice &device);
+    void onOutputDeviceChanged(const QAudioDevice &device);
+
+private:
     static pj_status_t putFrame(pjmedia_port *port, pjmedia_frame *frame);
     static pj_status_t getFrame(pjmedia_port *port, pjmedia_frame *frame);
     static pj_status_t onDestroy(pjmedia_port *port);
 
-    PaStream *m_stream = nullptr;
+    void startAudio();
+    void stopAudio();
+
+    QAudioSink *m_sink = nullptr;
+    QAudioSource *m_source = nullptr;
+    QIODevice *m_sinkDevice = nullptr;
+    QIODevice *m_sourceDevice = nullptr;
+
     pj_pool_t *m_pool = nullptr;
     pjmedia_port *m_port = nullptr;
     pjsua_conf_port_id m_confSlot = PJSUA_INVALID_ID;
@@ -87,6 +98,8 @@ private:
     SpscRingBuffer m_ecRefRing;
 
     pjmedia_echo_state *m_echoState = nullptr;
+    bool m_echoCancel = true;
+    int m_echoAggressiveness = 1;
 };
 
 #endif // AUDIOBRIDGE_H

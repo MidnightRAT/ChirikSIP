@@ -1,8 +1,8 @@
 #include "audiobridge.h"
-#include "portaudio_manager.h"
+#include "audiodevicemanager.h"
 #include <QDebug>
+#include <QAudioFormat>
 #include <cstring>
-#include <portaudio.h>
 
 static const int SAMPLE_RATE = 8000;
 static const int CHANNELS = 1;
@@ -23,73 +23,31 @@ static unsigned ecFlagsFromAggressiveness(int level)
 AudioBridge::AudioBridge(QObject *parent)
     : QObject(parent)
 {
+    connect(&AudioDeviceManager::instance(), &AudioDeviceManager::inputDeviceChanged,
+            this, &AudioBridge::onInputDeviceChanged);
+    connect(&AudioDeviceManager::instance(), &AudioDeviceManager::outputDeviceChanged,
+            this, &AudioBridge::onOutputDeviceChanged);
 }
 
 AudioBridge::~AudioBridge()
 {
-    if (m_stream || m_pool)
+    if (m_sink || m_source || m_pool)
         close();
 }
 
 bool AudioBridge::open(bool echoCancel, int aggressiveness)
 {
-    PortAudioManager::initialize();
+    m_echoCancel = echoCancel;
+    m_echoAggressiveness = aggressiveness;
 
-    PaStreamParameters inputParams;
-    inputParams.device = Pa_GetDefaultInputDevice();
-    if (inputParams.device == paNoDevice) {
-        qCritical() << "No default input audio device";
+    startAudio();
+    if (!m_source || !m_sink)
         return false;
-    }
-    const PaDeviceInfo *inputDevInfo = Pa_GetDeviceInfo(inputParams.device);
-    if (!inputDevInfo) {
-        qCritical() << "Failed to get input device info";
-        return false;
-    }
-    inputParams.channelCount = CHANNELS;
-    inputParams.sampleFormat = paFloat32;
-    inputParams.suggestedLatency = inputDevInfo->defaultLowInputLatency * 4;
-    inputParams.hostApiSpecificStreamInfo = nullptr;
-
-    PaStreamParameters outputParams;
-    outputParams.device = Pa_GetDefaultOutputDevice();
-    if (outputParams.device == paNoDevice) {
-        qCritical() << "No default output audio device";
-        return false;
-    }
-    const PaDeviceInfo *outputDevInfo = Pa_GetDeviceInfo(outputParams.device);
-    if (!outputDevInfo) {
-        qCritical() << "Failed to get output device info";
-        return false;
-    }
-    outputParams.channelCount = CHANNELS;
-    outputParams.sampleFormat = paFloat32;
-    outputParams.suggestedLatency = outputDevInfo->defaultLowOutputLatency * 4;
-    outputParams.hostApiSpecificStreamInfo = nullptr;
-
-    PaError err = Pa_OpenStream(&m_stream,
-                        &inputParams, &outputParams,
-                        SAMPLE_RATE, FRAME_SIZE,
-                        paClipOff, paCallback, this);
-    if (err != paNoError) {
-        qCritical() << "Pa_OpenStream failed:" << Pa_GetErrorText(err);
-        return false;
-    }
-
-    err = Pa_StartStream(m_stream);
-    if (err != paNoError) {
-        qCritical() << "Pa_StartStream failed:" << Pa_GetErrorText(err);
-        Pa_CloseStream(m_stream);
-        m_stream = nullptr;
-        return false;
-    }
 
     m_pool = pjsua_pool_create("aubridge", 512, 512);
     if (!m_pool) {
         qCritical() << "Failed to create pool for audio bridge";
-        Pa_StopStream(m_stream);
-        Pa_CloseStream(m_stream);
-        m_stream = nullptr;
+        stopAudio();
         return false;
     }
 
@@ -112,14 +70,11 @@ bool AudioBridge::open(bool echoCancel, int aggressiveness)
         qCritical() << "Failed to allocate port";
         pj_pool_release(m_pool);
         m_pool = nullptr;
-        Pa_StopStream(m_stream);
-        Pa_CloseStream(m_stream);
-        m_stream = nullptr;
-        PortAudioManager::terminate();
+        stopAudio();
         return false;
     }
 
-    static const QByteArray portName("portaudio");
+    static const QByteArray portName("qtmultimedia");
     pj_str_t name = pj_str(const_cast<char*>(portName.constData()));
     pjmedia_port_info_init(&m_port->info, &name, 0x41554442,
                            SAMPLE_RATE, CHANNELS, 16, FRAME_SIZE);
@@ -134,10 +89,7 @@ bool AudioBridge::open(bool echoCancel, int aggressiveness)
         pj_pool_release(m_pool);
         m_pool = nullptr;
         m_port = nullptr;
-        Pa_StopStream(m_stream);
-        Pa_CloseStream(m_stream);
-        m_stream = nullptr;
-        PortAudioManager::terminate();
+        stopAudio();
         return false;
     }
 
@@ -151,20 +103,14 @@ bool AudioBridge::open(bool echoCancel, int aggressiveness)
 
 void AudioBridge::close()
 {
-    if (m_stream) {
-        Pa_StopStream(m_stream);
-        Pa_CloseStream(m_stream);
-        m_stream = nullptr;
+    if (m_confSlot != PJSUA_INVALID_ID) {
+        pjsua_conf_remove_port(m_confSlot);
+        m_confSlot = PJSUA_INVALID_ID;
     }
 
     if (m_echoState) {
         pjmedia_echo_destroy(m_echoState);
         m_echoState = nullptr;
-    }
-
-    if (m_confSlot != PJSUA_INVALID_ID) {
-        pjsua_conf_remove_port(m_confSlot);
-        m_confSlot = PJSUA_INVALID_ID;
     }
 
     if (m_pool) {
@@ -173,75 +119,78 @@ void AudioBridge::close()
     }
 
     m_port = nullptr;
+    stopAudio();
 
     qInfo() << "Audio bridge closed";
 }
 
-int AudioBridge::paCallback(const void *input, void *output,
-                            unsigned long frameCount,
-                            const PaStreamCallbackTimeInfo *timeInfo,
-                            PaStreamCallbackFlags statusFlags,
-                            void *userData)
+void AudioBridge::startAudio()
 {
-    Q_UNUSED(timeInfo);
-    Q_UNUSED(statusFlags);
+    AudioDeviceManager &dm = AudioDeviceManager::instance();
 
-    AudioBridge *self = static_cast<AudioBridge *>(userData);
-    if (!self || !output)
-        return paAbort;
+    QAudioFormat format;
+    format.setSampleRate(SAMPLE_RATE);
+    format.setChannelCount(CHANNELS);
+    format.setSampleFormat(QAudioFormat::Int16);
 
-    const float *in = static_cast<const float *>(input);
-    float *out = static_cast<float *>(output);
+    QAudioDevice inputDev = dm.currentInputDevice();
+    m_source = new QAudioSource(inputDev, format, this);
+    m_sourceDevice = m_source->start();
 
-    if (frameCount > FRAME_SIZE)
-        frameCount = FRAME_SIZE;
+    QAudioDevice outputDev = dm.currentOutputDevice();
+    m_sink = new QAudioSink(outputDev, format, this);
+    m_sinkDevice = m_sink->start();
 
-    if (input) {
-        float capBuf[FRAME_SIZE];
-        std::memcpy(capBuf, in, frameCount * sizeof(float));
-
-        if (self->m_echoState) {
-            pj_int16_t refI16[FRAME_SIZE];
-            pj_int16_t micI16[FRAME_SIZE];
-            unsigned refCount = frameCount;
-
-            float refFloat[FRAME_SIZE];
-            if (!self->m_ecRefRing.pop(refFloat, refCount))
-                std::memset(refFloat, 0, refCount * sizeof(float));
-
-            for (unsigned i = 0; i < refCount; ++i) {
-                float s = refFloat[i] * 32767.0f;
-                if (s > 32767.0f) s = 32767.0f;
-                if (s < -32768.0f) s = -32768.0f;
-                refI16[i] = (pj_int16_t)s;
-            }
-            for (unsigned i = 0; i < frameCount; ++i) {
-                float s = capBuf[i] * 32767.0f;
-                if (s > 32767.0f) s = 32767.0f;
-                if (s < -32768.0f) s = -32768.0f;
-                micI16[i] = (pj_int16_t)s;
-            }
-
-            pjmedia_echo_playback(self->m_echoState, refI16);
-            pjmedia_echo_capture(self->m_echoState, micI16, 0);
-
-            for (unsigned i = 0; i < frameCount; ++i)
-                capBuf[i] = micI16[i] / 32768.0f;
-        }
-
-        self->m_captureRing.push(capBuf, frameCount);
+    if (!m_sourceDevice || !m_sinkDevice) {
+        qCritical() << "Failed to start audio devices";
+        stopAudio();
+        return;
     }
 
-    if (!self->m_playbackRing.pop(out, frameCount))
-        std::memset(out, 0, frameCount * sizeof(float));
+    qInfo() << "Audio started with input:" << inputDev.description()
+            << "output:" << outputDev.description();
+}
 
-    return paContinue;
+void AudioBridge::stopAudio()
+{
+    if (m_source) {
+        m_source->stop();
+        delete m_source;
+        m_source = nullptr;
+        m_sourceDevice = nullptr;
+    }
+    if (m_sink) {
+        m_sink->stop();
+        delete m_sink;
+        m_sink = nullptr;
+        m_sinkDevice = nullptr;
+    }
+}
+
+void AudioBridge::onInputDeviceChanged(const QAudioDevice &device)
+{
+    Q_UNUSED(device);
+    if (m_source) {
+        qInfo() << "Input device changed, restarting audio";
+        stopAudio();
+        startAudio();
+    }
+}
+
+void AudioBridge::onOutputDeviceChanged(const QAudioDevice &device)
+{
+    Q_UNUSED(device);
+    if (m_sink) {
+        qInfo() << "Output device changed, restarting audio";
+        stopAudio();
+        startAudio();
+    }
 }
 
 pj_status_t AudioBridge::putFrame(pjmedia_port *port, pjmedia_frame *frame)
 {
     AudioBridge *self = static_cast<AudioBridge *>(port->port_data.pdata);
-    if (!self || !self->m_stream)
+    if (!self || !self->m_sinkDevice)
         return PJ_EINVAL;
 
     const pj_int16_t *samples = (const pj_int16_t *)frame->buf;
@@ -260,13 +209,21 @@ pj_status_t AudioBridge::putFrame(pjmedia_port *port, pjmedia_frame *frame)
         self->m_ecRefRing.push(ecRefFloat, count);
 
     self->m_playbackRing.push(playBuf, count);
+
+    // Write to Qt audio sink
+    float outBuf[FRAME_SIZE];
+    if (self->m_playbackRing.pop(outBuf, count)) {
+        QByteArray pcmData(reinterpret_cast<const char*>(outBuf), count * sizeof(float));
+        self->m_sinkDevice->write(pcmData);
+    }
+
     return PJ_SUCCESS;
 }
 
 pj_status_t AudioBridge::getFrame(pjmedia_port *port, pjmedia_frame *frame)
 {
     AudioBridge *self = static_cast<AudioBridge *>(port->port_data.pdata);
-    if (!self || !self->m_stream) {
+    if (!self || !self->m_sourceDevice) {
         frame->size = 0;
         return PJ_EINVAL;
     }
@@ -276,10 +233,54 @@ pj_status_t AudioBridge::getFrame(pjmedia_port *port, pjmedia_frame *frame)
     if (count > FRAME_SIZE)
         count = FRAME_SIZE;
 
+    // Read from Qt audio source
+    QByteArray pcmData = self->m_sourceDevice->read(count * sizeof(float));
+    unsigned readCount = pcmData.size() / sizeof(float);
+    const float *floatData = reinterpret_cast<const float *>(pcmData.constData());
+
     float capBuf[FRAME_SIZE];
-    if (self->m_captureRing.pop(capBuf, count)) {
+    if (readCount >= count) {
+        for (unsigned i = 0; i < count; ++i)
+            capBuf[i] = floatData[i];
+    } else {
+        std::memset(capBuf, 0, count * sizeof(float));
+    }
+
+    if (self->m_echoState) {
+        pj_int16_t refI16[FRAME_SIZE];
+        pj_int16_t micI16[FRAME_SIZE];
+        unsigned refCount = count;
+
+        float refFloat[FRAME_SIZE];
+        if (!self->m_ecRefRing.pop(refFloat, refCount))
+            std::memset(refFloat, 0, refCount * sizeof(float));
+
+        for (unsigned i = 0; i < refCount; ++i) {
+            float s = refFloat[i] * 32767.0f;
+            if (s > 32767.0f) s = 32767.0f;
+            if (s < -32768.0f) s = -32768.0f;
+            refI16[i] = (pj_int16_t)s;
+        }
         for (unsigned i = 0; i < count; ++i) {
             float s = capBuf[i] * 32767.0f;
+            if (s > 32767.0f) s = 32767.0f;
+            if (s < -32768.0f) s = -32768.0f;
+            micI16[i] = (pj_int16_t)s;
+        }
+
+        pjmedia_echo_playback(self->m_echoState, refI16);
+        pjmedia_echo_capture(self->m_echoState, micI16, 0);
+
+        for (unsigned i = 0; i < count; ++i)
+            capBuf[i] = micI16[i] / 32768.0f;
+    }
+
+    self->m_captureRing.push(capBuf, count);
+
+    float capOut[FRAME_SIZE];
+    if (self->m_captureRing.pop(capOut, count)) {
+        for (unsigned i = 0; i < count; ++i) {
+            float s = capOut[i] * 32767.0f;
             if (s > 32767.0f) s = 32767.0f;
             if (s < -32768.0f) s = -32768.0f;
             samples[i] = (pj_int16_t)s;
