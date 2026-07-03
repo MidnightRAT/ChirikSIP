@@ -20,18 +20,15 @@ set(APP_SOURCES
 
 add_executable(chiriksip ${APP_SOURCES})
 
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets DBus)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets DBus Multimedia)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(PJSIP REQUIRED IMPORTED_TARGET libpjproject)
-pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
 target_link_libraries(chiriksip PRIVATE
-    Qt6::Core Qt6::Widgets Qt6::DBus
+    Qt6::Core Qt6::Widgets Qt6::DBus Qt6::Multimedia
     PkgConfig::PJSIP
-    ${PORTAUDIO_LIBRARIES}
 )
-target_include_directories(chiriksip PRIVATE ${PORTAUDIO_INCLUDE_DIRS})
-target_compile_options(chiriksip PRIVATE ${PJSIP_CFLAGS_OTHER} ${PORTAUDIO_CFLAGS_OTHER})
+target_compile_options(chiriksip PRIVATE ${PJSIP_CFLAGS_OTHER})
 
 target_compile_definitions(chiriksip PRIVATE PROJECT_VERSION="${PROJECT_VERSION}")
 
@@ -74,10 +71,9 @@ set(TEST_SOURCES
 )
 add_executable(test_parsing ${TEST_SOURCES})
 target_link_libraries(test_parsing PRIVATE
-    Qt6::Core Qt6::Widgets Qt6::Test
+    Qt6::Core Qt6::Widgets Qt6::Test Qt6::Multimedia
     PkgConfig::PJSIP
-    ${PORTAUDIO_LIBRARIES}
 )
-target_include_directories(test_parsing PRIVATE ${PORTAUDIO_INCLUDE_DIRS} src)
+target_include_directories(test_parsing PRIVATE src)
 target_compile_definitions(test_parsing PRIVATE PROJECT_VERSION="${PROJECT_VERSION}")
 add_test(NAME test_parsing COMMAND test_parsing)
