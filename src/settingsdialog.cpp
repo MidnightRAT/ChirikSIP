@@ -6,6 +6,8 @@
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QApplication>
+#include <QAudioDevice>
+#include <QMediaDevices>
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent)
@@ -46,6 +48,18 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     m_echoAggressivenessCombo->setCurrentIndex(1);
     form->addRow("AEC level:", m_echoAggressivenessCombo);
 
+    m_inputDeviceCombo = new QComboBox(this);
+    const auto inputs = QMediaDevices::audioInputs();
+    for (const QAudioDevice &dev : inputs)
+        m_inputDeviceCombo->addItem(dev.description(), QVariant::fromValue(dev));
+    form->addRow("Microphone:", m_inputDeviceCombo);
+
+    m_outputDeviceCombo = new QComboBox(this);
+    const auto outputs = QMediaDevices::audioOutputs();
+    for (const QAudioDevice &dev : outputs)
+        m_outputDeviceCombo->addItem(dev.description(), QVariant::fromValue(dev));
+    form->addRow("Speakers:", m_outputDeviceCombo);
+
     mainLayout->addLayout(form);
 
     QDialogButtonBox *buttons = new QDialogButtonBox(
@@ -70,4 +84,27 @@ void SettingsDialog::setEchoCancelEnabled(bool enabled) { m_echoCancelCheck->set
 void SettingsDialog::setEchoAggressiveness(int level) {
     int idx = m_echoAggressivenessCombo->findData(level);
     if (idx >= 0) m_echoAggressivenessCombo->setCurrentIndex(idx);
+}
+
+QAudioDevice SettingsDialog::selectedInputDevice() const {
+    return m_inputDeviceCombo->currentData().value<QAudioDevice>();
+}
+QAudioDevice SettingsDialog::selectedOutputDevice() const {
+    return m_outputDeviceCombo->currentData().value<QAudioDevice>();
+}
+void SettingsDialog::setInputDevice(const QAudioDevice &device) {
+    for (int i = 0; i < m_inputDeviceCombo->count(); ++i) {
+        if (m_inputDeviceCombo->itemData(i).value<QAudioDevice>().id() == device.id()) {
+            m_inputDeviceCombo->setCurrentIndex(i);
+            break;
+        }
+    }
+}
+void SettingsDialog::setOutputDevice(const QAudioDevice &device) {
+    for (int i = 0; i < m_outputDeviceCombo->count(); ++i) {
+        if (m_outputDeviceCombo->itemData(i).value<QAudioDevice>().id() == device.id()) {
+            m_outputDeviceCombo->setCurrentIndex(i);
+            break;
+        }
+    }
 }

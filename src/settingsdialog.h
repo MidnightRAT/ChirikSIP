@@ -8,6 +8,7 @@
 #include <QCheckBox>
 #include <QPushButton>
 #include <QFormLayout>
+#include <QAudioDevice>
 
 class SettingsDialog : public QDialog
 {
@@ -21,6 +22,8 @@ public:
     int port() const;
     bool echoCancelEnabled() const;
     int echoAggressiveness() const;
+    QAudioDevice selectedInputDevice() const;
+    QAudioDevice selectedOutputDevice() const;
 
     void setServer(const QString &s);
     void setUsername(const QString &u);
@@ -28,6 +31,8 @@ public:
     void setPort(int p);
     void setEchoCancelEnabled(bool enabled);
     void setEchoAggressiveness(int level);
+    void setInputDevice(const QAudioDevice &device);
+    void setOutputDevice(const QAudioDevice &device);
 
 private:
     QLineEdit *m_serverEdit;
@@ -36,6 +41,8 @@ private:
     QSpinBox *m_portEdit;
     QCheckBox *m_echoCancelCheck;
     QComboBox *m_echoAggressivenessCombo;
+    QComboBox *m_inputDeviceCombo;
+    QComboBox *m_outputDeviceCombo;
 };
 
 #endif // SETTINGSDIALOG_H
