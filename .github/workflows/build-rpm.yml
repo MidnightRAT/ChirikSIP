@@ -21,6 +21,9 @@ on:
 jobs:
   build-rpm:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        fedora: ['43', '44']
 
     steps:
       - uses: actions/checkout@v4
@@ -30,15 +33,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y podman
 
-      - name: Build RPM for Fedora 44
+      - name: Build RPM for Fedora ${{ matrix.fedora }}
         run: |
           chmod +x build-rpm.sh
-          ./build-rpm.sh "44"
+          ./build-rpm.sh "${{ matrix.fedora }}"
 
       - name: Upload RPM artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: chiriksip-rpm
+          name: chiriksip-rpm-f${{ matrix.fedora }}
           path: build/rpms/*.rpm
 
   publish-rpm:
@@ -49,11 +52,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download RPM artifacts
+      - name: Download all RPM artifacts
         uses: actions/download-artifact@v4
         with:
-          name: chiriksip-rpm
+          pattern: chiriksip-rpm-f*
           path: artifacts
+          merge-multiple: true
 
       - name: Remove debug packages
         run: rm -f artifacts/*debuginfo*.rpm artifacts/*debugsource*.rpm

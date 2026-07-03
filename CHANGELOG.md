@@ -1,3 +1,10 @@
+## 1.0.2 (2026-07-03)
+
+### CI/CD
+- RPM workflow now builds for Fedora 43 and Fedora 44 (previously only Fedora 44)
+- DEB workflow now builds for Ubuntu 22.04 and Ubuntu 24.04 (previously only Ubuntu 24.04)
+- Flatpak bundle published to release (unchanged)
+
 ## 1.0.1 (2026-07-02)
 
 ### Bug Fixes

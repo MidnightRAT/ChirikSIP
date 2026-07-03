@@ -1,6 +1,6 @@
 # ChirikSIP
 
-A minimal SIP client for KDE Plasma, built with Qt6 and PJSIP.
+Мінімалістичний SIP-клієнт для KDE Plasma, побудований на Qt6 та PJSIP.
 
 ![Build RPM](https://github.com/MidnightRAT/ChirikSIP/actions/workflows/build-rpm.yml/badge.svg)
 ![Build DEB](https://github.com/MidnightRAT/ChirikSIP/actions/workflows/build-deb.yml/badge.svg)
@@ -10,37 +10,50 @@ A minimal SIP client for KDE Plasma, built with Qt6 and PJSIP.
 
 Детальніші скріншоти див. у [screenshots/README.md](screenshots/README.md)
 
-## Features
+## Можливості
 
-- SIP registration with digest authentication
-- Outgoing calls (dial by number or SIP URI)
-- Incoming calls with ringtone and Answer button
-- Audio bridge via PortAudio (works with PipeWire/PulseAudio)
-- Echo cancellation via pjmedia_echo (configurable aggressiveness)
-- Phone-style numpad UI (123456789*0#)
-- LCD display with Segment16A digital font
-- Caller name display with scrolling text
-- Setup wizard on first launch
-- Settings in separate dialog (Ctrl+,)
-- Configurable SIP port (default: 0 = auto-select)
-- Status bar shows current transport port (e.g. UDP:50600)
-- Status bar shows owner number (centered, bold)
-- Call duration timer (HH:MM:SS) centered in status bar during calls
-- Auto re-registration when settings change
-- System tray: minimize to tray, only Ctrl+Q exits
-- Incoming call popup when minimized
-- Settings persistence (~/.config/chiriksip/)
-- Auto-registration on startup
-- Keyboard support: 0-9, *, #, +, Enter, Escape, Backspace
-- G.711 A-law (PCMA) and G.711 u-law (PCMU) codecs only
-- Single instance: only one ChirikSIP can run at a time
-- Improved stability: fixed null pointer crashes when no audio device, race conditions in PortAudio threads, data races in ringtone playback, data races in AudioBridge shared buffers (memory_order), PortAudioManager refcount leak, and m_incomingCallId not reset on remote hangup
-- Config file permissions restricted to owner-only (password security)
-- Setup wizard: Enter key triggers Next/Finish button, focus moves to the active input field
-- Password obfuscation: stored as base64 (not encryption — use system keyring for real security)
-- Auto-migration: plaintext passwords re-encoded to base64 on first load
+### SIP
+- Реєстрація з digest-аутентифікацією
+- Вихідні виклики за номером або SIP URI
+- Вхідні виклики з рингтоном та кнопкою Answer
+- Автоматична реєстрація при запуску
+- Повторна реєстрація при зміні налаштувань
+- Кодеки: G.711 A-law (PCMA) та G.711 u-law (PCMU)
+- Налаштування SIP-порту (0 = авто-вибір)
 
-## Architecture
+### Аудіо
+- Міст PortAudio ↔ PJSIP conference bridge
+- Echo cancellation через `pjmedia_echo` (Conservative / Moderate / Aggressive)
+- SPSC lock-free ring buffers (16 frames × 160 samples)
+- Підтримка PipeWire, PulseAudio, ALSA
+
+### Інтерфейс
+- LCD-дисплей з шрифтом Segment16A
+- Нумпад у стилі телефону (123456789*0#)
+- Годинник (HH:mm:ss) на дисплеї, коли не викликаєш
+- Тривалість виклику (HH:MM:SS) у статус-барі
+- Номер власника (центрований, жирний) у статус-барі
+- Поточний порт транспорту (наприклад `UDP:50600`) праворуч у статус-барі
+- Скрол довгих імен викликача
+
+### Системний трей
+- Мінімізація в трей при закритті (X / Alt+F4)
+- Вхідний виклик — popup-сповіщення при згорнутому вікні
+- Вихід тільки через Ctrl+Q або меню трей
+
+### Налаштування
+- Майстер першого запуску (4 сторінки)
+- Окремий діалог налаштувань (Ctrl+,)
+- Поля: сервер, користувач, пароль, порт, echo cancellation
+- Налаштування зберігаються у `~/.config/chiriksip/`
+
+### Безпека
+- Паролі зберігаються як base64 (обфускація, не шифрування)
+- Автоматична міграція plaintext → base64 при першому завантаженні
+- Права config-файлу обмежені 0600 (тільки власник)
+- Single instance через D-Bus
+
+## Архітектура
 
 ![Architecture](docs/architecture.svg)
 
@@ -52,42 +65,103 @@ A minimal SIP client for KDE Plasma, built with Qt6 and PJSIP.
                             │                    │
                      ┌──────▼───────┐     ┌──────▼───────┐
                      │ AudioBridge  │     │   PJSIP      │
-                     │ (PortAudio)  │     │  conference  │
-                     │  ┌─────────┐ │     │   bridge     │
-                     │  │EC (AEC) │ │     └──────────────┘
-                     │  │×3 rings │ │
-                     │  └─────────┘ │     ┌──────────────┐
-                     └──────────────┘     │  Ringtone    │
-                                          │ (440Hz sine) │
-                     ┌──────────────┐     └──────────────┘
-                     │PortAudioMgr  │
-                     │(ref-counted) │
-                     └──────────────┘
+                     │              │     │  conference  │
+                     │ ┌──────────┐ │     │   bridge     │
+                     │ │ Echo CXL │ │     └──────────────┘
+                     │ │(pjmedia) │ │
+                     │ └──────────┘ │     ┌──────────────┐
+                     │ ┌──────────┐ │     │  Ringtone    │
+                     │ │Ring: play│ │     │ (440Hz sine) │
+                     │ │Ring: capt│ │     └──────────────┘
+                     │ │Ring: ec  │ │
+                     │ └──────────┘ │     ┌──────────────┐
+                     │  PortAudio   │     │PortAudioMgr  │
+                     │   stream     │     │(ref-counted) │
+                     └──────────────┘     └──────────────┘
 ```
 
-## Build Dependencies
+### Потокова модель
 
-| Package | Purpose |
-|---------|---------|
+| Потік | Компоненти | Зв'язок |
+|-------|-----------|---------|
+| Qt main | MainWindow, CallManager, SipClient (API), AudioBridge, SettingsDialog | Сигнали/слоти |
+| PJSIP ioqueue | SipClient static callbacks | `QMetaObject::invokeMethod` → QueuedConnection |
+| PortAudio | AudioBridge paCallback, Ringtone callback | SPSC ring buffers, `std::atomic` |
+
+### Аудіо-пайплайн
+
+```
+Мікрофон → paCallback → EC (pjmedia_echo) → captureRing → getFrame → conf bridge
+conf bridge → putFrame → playbackRing → paCallback → динамік
+conf bridge → putFrame → ecRefRing → paCallback → EC reference signal
+```
+
+### Залежності між класами
+
+```
+MainWindow ──owns──> SipClient, CallManager, CallNotification, ScrollHelper
+CallManager ──owns──> AudioBridge
+CallManager ──uses──> SipClient (делегує SIP-операції)
+SipClient ──owns──> Ringtone
+AudioBridge ──uses──> PortAudioManager (ref-counted init/terminate)
+Ringtone ──uses──> PortAudioManager
+```
+
+## Використання
+
+1. Запустіть `chiriksip`
+2. При першому запуску відкриється **Setup Wizard** — введіть SIP-сервер, логін, пароль
+3. Або відкрийте **Settings > Settings** (Ctrl+,) та налаштуйте акаунт
+4. Натисніть **Register** (або реєстрація відбудеться автоматично)
+5. Набирайте номер нумпадом та натискайте **Call**
+6. Для вхідних викликів натискайте **Answer**
+
+## Клавіатурні скорочення
+
+| Клавіша | Дія |
+|---------|-----|
+| 0-9 | Ввести цифру |
+| * | Ввести зірочку |
+| # | Ввести решітку |
+| + | Ввести плюс |
+| Enter | Подзвонити / Прийняти |
+| Escape | Завершити виклик |
+| Backspace | Видалити останню цифру |
+| Ctrl+, | Відкрити налаштування |
+| Ctrl+Q | Примусовий вихід |
+
+## Поведінка кнопок
+
+| Кнопка | Коротке натискання | Довге натискання |
+|--------|-------------------|------------------|
+| Hangup | Видалити цифру / Завершити виклик | Очистити / Завершити виклик |
+| 0+ | Вставити "0" | Вставити "+" |
+
+## Збірка з джерел
+
+### Залежності (Fedora)
+
+| Пакет | Призначення |
+|-------|-------------|
 | `cmake >= 3.20` | Build system |
-| `gcc-c++` | C++17 compiler |
-| `qt6-qtbase-devel` | Qt6 Core, Widgets |
-| `pkgconfig(libpjproject)` | PJSIP SIP stack |
-| `portaudio-devel` | Audio I/O |
-| `desktop-file-utils` | .desktop file validation |
-| `hicolor-icon-theme` | Icon installation |
+| `gcc-c++` | C++17 компілятор |
+| `qt6-qtbase-devel` | Qt6 Core, Widgets, DBus |
+| `pkgconfig(libpjproject)` | PJSIP SIP-стек |
+| `portaudio-devel` | Аудіо I/O |
+| `desktop-file-utils` | Валідація .desktop файлу |
+| `hicolor-icon-theme` | Встановлення іконок |
 
-## Runtime Dependencies
+### Залежності (runtime)
 
-| Package | Purpose |
-|---------|---------|
+| Пакет | Призначення |
+|-------|-------------|
 | `qt6-qtbase` | Qt6 runtime |
 | `qt6-qtbase-gui` | Qt6 GUI |
-| `pjproject` | SIP/audio stack |
-| `portaudio` | Audio device access |
-| `hicolor-icon-theme` | System icons |
+| `pjproject` | SIP/audio стек |
+| `portaudio` | Аудіо-пристрої |
+| `hicolor-icon-theme` | Системні іконки |
 
-## Build from Source
+### Збірка
 
 ```bash
 mkdir build && cd build
@@ -95,165 +169,146 @@ cmake ..
 cmake --build .
 ```
 
-## Install
+### Встановлення
 
 ```bash
 cmake --install build
 ```
 
-## RPM Build
+## RPM Build (Fedora)
 
-### Local Build (Fedora)
+### Локальна збірка
 
 ```bash
-# Create source tarball
-cd /path/to/ChirikSIP
-VERSION=$(grep 'Version:' packaging/chirik.spec | awk '{print $2}')
+VERSION=$(grep 'Version:' packaging/chiriksip.spec | awk '{print $2}')
 tar czf ~/rpmbuild/SOURCES/chiriksip-${VERSION}.tar.gz \
     --transform "s,^,chiriksip-${VERSION}/," \
-    --exclude build --exclude build-win32 --exclude build-win64 \
-    --exclude dist-win32 --exclude dist-win64 \
-    --exclude .git --exclude .gitignore --exclude .mimocode \
-    .
+    -X .rpmignore .
 
-# Build source RPM only (binary RPM requires Fedora with all deps)
+# Тільки source RPM:
 rpmbuild -bs packaging/chiriksip.spec
 
-# On Fedora, build both source and binary RPM:
-# rpmbuild -ba packaging/chiriksip.spec
+# Source + binary RPM (потрібні всі залежності):
+rpmbuild -ba packaging/chiriksip.spec
 ```
 
-### Container Build (podman/docker)
-
-Build RPM packages in containers for Fedora 36+ without installing dependencies on your host system.
-
-**Prerequisites:** podman or docker installed
+### Збірка в контейнері (podman/docker)
 
 ```bash
-# Build for a single Fedora version
-./build-rpm.sh "42"
+# Fedora 43
+./build-rpm.sh "43"
 
-# Build for multiple versions (matrix build)
-./build-rpm.sh "40 41 42"
+# Fedora 43 + 44
+./build-rpm.sh "43 44"
 
-# Build with rpmfusion repositories (for older Fedora or additional codecs)
-./build-rpm.sh --rpmfusion "36 37 38"
+# З rpmfusion
+./build-rpm.sh --rpmfusion "40 41 42"
 
-# Force rebuild without cache
-./build-rpm.sh --force "42"
+# Примусова перезбірка
+./build-rpm.sh --force "44"
 ```
 
-Artifacts are saved to `build/rpms/`:
-- `chiriksip-*.rpm` — main package
-- `chiriksip-debuginfo-*.rpm` — debug symbols
-- `chiriksip-debugsource-*.rpm` — debug source
-- `chiriksip-*.src.rpm` — source RPM
+Артефакти: `build/rpms/` — `chiriksip-*.rpm`, `chiriksip-*.src.rpm`
 
-**Options:**
-- `--rpmfusion` — enable rpmfusion-free and rpmfusion-nonfree repositories
-- `--force` — rebuild without Docker/podman cache
-- `-h, --help` — show usage information
+Опції: `--rpmfusion`, `--force`, `-h/--help`
 
-## DEB Build
+## DEB Build (Ubuntu)
 
-### Container Build (podman/docker)
+### Збірка в контейнері (podman/docker)
 
-Build .deb packages in containers for Ubuntu 22.04 LTS and 24.04 LTS without installing dependencies on your host system.
-
-**Supported versions:** Ubuntu 22.04 LTS (Jammy), Ubuntu 24.04 LTS (Noble)
-
-**Prerequisites:** podman or docker installed
+Підтримуються Ubuntu 22.04 LTS (Jammy) та 24.04 LTS (Noble). PJSIP збирається з source.
 
 ```bash
-# Build for Ubuntu 22.04
+# Ubuntu 22.04
 ./build-deb.sh "22.04"
 
-# Build for Ubuntu 24.04
-./build-deb.sh "24.04"
-
-# Build for both LTS versions
+# Ubuntu 22.04 + 24.04
 ./build-deb.sh "22.04 24.04"
 
-# Force rebuild without cache
+# Примусова перезбірка
 ./build-deb.sh --force "24.04"
 ```
 
-Artifacts are saved to `build/debs/`:
-- `chiriksip_*.deb` — main package
-- `chiriksip_*.changes` — changes file
-- `chiriksip_*.buildinfo` — build info
+Артефакти: `build/debs/` — `chiriksip_*.deb`
 
-**Options:**
-- `--force` — rebuild without Docker/podman cache
-- `-h, --help` — show usage information
+Опції: `--force`, `-h/--help`
 
 ## Flatpak Build
 
-### Local Build
-
-Build Flatpak package locally using flatpak-builder.
-
-**Prerequisites:** flatpak and flatpak-builder installed
+### Локальна збірка
 
 ```bash
-# Build and install
 ./build-flatpak.sh
 
-# Or manually
-flatpak-builder --force-clean --install-deps-from=flathub --repo=repo builddir com.github.chirik.ChirikSIP.yml
+# Або вручну
+flatpak-builder --force-clean --install-deps-from=flathub \
+    --repo=repo builddir com.github.chirik.ChirikSIP.yml
 flatpak install --user repo com.github.chirik.ChirikSIP
-
-# Run
 flatpak run com.github.chirik.ChirikSIP
 ```
 
-### From Flathub
+### З Flathub
 
 ```bash
 flatpak install flathub com.github.chirik.ChirikSIP
 flatpak run com.github.chirik.ChirikSIP
 ```
 
+## Тести
+
+```bash
+cd build && ctest
+```
+
+Юніт-тести (`tests/test_parsing.cpp`):
+- `testParseNumber` — 6 випадків (номер, SIP URI, display name, без @, пустий, міжнародний)
+- `testParseDisplayName` — 5 випадків
+- `testFormatDuration` — 8 випадків (0, 1с, 59с, 1хв, 1год, 1год1хв1с, 23:59:59, 2мін5с)
+
 ## CI/CD
 
-GitHub Actions workflows:
+GitHub Actions — автоматична збірка та публікація при push до `main`:
 
-| Workflow | Trigger | Platform | Output |
-|----------|---------|----------|--------|
-| `build-rpm.yml` | Push/PR to `main` | Ubuntu (podman) | RPM for Fedora 44 (x86_64 + src) |
-| `build-deb.yml` | Push/PR to `main` | Ubuntu (podman) | DEB for Ubuntu 24.04 |
-| `build-flatpak.yml` | Push/PR to `main` | Ubuntu (CI) | Flatpak bundle + sources |
+| Workflow | Тригери | Платформа | Артефакти |
+|----------|---------|-----------|-----------|
+| `build-rpm.yml` | push/PR → `main` | Ubuntu + podman | RPM для Fedora 43, 44 (x86_64 + src) |
+| `build-deb.yml` | push/PR → `main` | Ubuntu + podman | DEB для Ubuntu 22.04, 24.04 |
+| `build-flatpak.yml` | push/PR → `main` | flatpak-github-actions | Flatpak bundle + source tarball |
 
-Workflows run automatically when changes touch `src/`, `packaging/`, `debian/`, `CMakeLists.txt`, or `resources/`. All build artifacts are published to GitHub releases on push to `main`.
+Тригери: зміни в `src/`, `packaging/`, `debian/`, `CMakeLists.txt`, `resources/`, відповідних workflow-файлах.
 
-## Usage
+Всі артефакти публікуються в GitHub Releases (tag `v<version>`).
 
-1. Launch `chiriksip`
-2. Open **Settings > Settings** (Ctrl+,) and enter SIP server, username, password
-3. Click **Register** (or it registers automatically if settings are saved)
-4. Dial a number using the numpad and press **Call**
-5. For incoming calls, press **Answer**
+## Структура проєкту
 
-## Keyboard Shortcuts
+```
+src/
+  main.cpp                — точка входу, D-Bus single instance
+  mainwindow.h/.cpp       — головне вікно (UI + логіка)
+  sipclient.h/.cpp        — обгортка PJSIP
+  callmanager.h/.cpp      — service layer для викликів
+  audiobridge.h/.cpp      — міст PortAudio ↔ PJSIP conference bridge
+  ringtone.h/.cpp         — генерація рингтону (440 Hz)
+  callnotification.h/.cpp — popup вхідного виклику
+  scrollhelper.h/.cpp     — горизонтальний скрол тексту
+  settingsdialog.h/.cpp   — діалог налаштувань
+  setupwizard.h/.cpp      — майстер першого запуску
+  portaudio_manager.h     — ref-counted обгортка PortAudio
+tests/
+  test_parsing.cpp        — юніт-тести
+resources/
+  chiriksip.desktop       — XDG desktop entry
+  icons/                  — іконки 16x16 ... 256x256
+packaging/
+  chiriksip.spec          — RPM spec (Fedora)
+debian/
+  changelog, control, rules — DEB packaging (Ubuntu)
+.github/workflows/
+  build-rpm.yml           — CI: RPM
+  build-deb.yml           — CI: DEB
+  build-flatpak.yml       — CI: Flatpak
+```
 
-| Key | Action |
-|-----|--------|
-| 0-9 | Input digit |
-| * | Input asterisk |
-| # | Input hash |
-| + | Input plus |
-| Enter | Make call / Answer |
-| Escape | End call |
-| Backspace | Delete last digit |
-| Ctrl+, | Open Settings |
-
-## Button Behavior
-
-| Button | Short Press | Long Press |
-|--------|-------------|------------|
-| Hangup | Delete last digit / End call | Clear all / End call |
-| 0+ | Insert "0" | Insert "+" |
-
-## License
+## Ліцензія
 
 MIT

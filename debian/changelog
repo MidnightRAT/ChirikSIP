@@ -1,3 +1,10 @@
+chiriksip (1.0.2-1) unstable; urgency=medium
+
+  * CI/CD: RPM workflow builds for Fedora 43 and 44 (was 44 only)
+  * CI/CD: DEB workflow builds for Ubuntu 22.04 and 24.04 (was 24.04 only)
+
+ -- Chirik <chirikrat@gmail.com>  Thu, 03 Jul 2026 12:00:00 +0300
+
 chiriksip (1.0.0-25) unstable; urgency=medium
 
   * Fixed security issues from code review

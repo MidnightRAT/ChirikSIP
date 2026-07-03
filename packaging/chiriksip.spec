@@ -1,7 +1,7 @@
 %define debug_package %{nil}
 
 Name:           chiriksip
-Version:        1.0.1
+Version:        1.0.2
 Release:        1%{?dist}
 Summary:        A simple SIP client for KDE Plasma
 
@@ -55,6 +55,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop || :
 %{_datadir}/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
+* Thu Jul 03 2026 Chirik <chirikrat@gmail.com> - 1.0.2-1
+- CI/CD: RPM workflow builds for Fedora 43 and 44 (was 44 only)
+- CI/CD: DEB workflow builds for Ubuntu 22.04 and 24.04 (was 24.04 only)
 * Wed Jul 02 2026 Chirik <chirikrat@gmail.com> - 1.0.1-1
 - Fixed echo cancellation reference buffer normalization
 - Fixed crash: added shutdown() in MainWindow destructor
