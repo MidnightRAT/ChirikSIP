@@ -8,6 +8,8 @@ AudioDeviceManager::AudioDeviceManager(QObject *parent)
             this, &AudioDeviceManager::deviceListChanged);
     connect(&QMediaDevices::instance(), &QMediaDevices::audioOutputsChanged,
             this, &AudioDeviceManager::deviceListChanged);
+    connect(this, &AudioDeviceManager::deviceListChanged,
+            this, &AudioDeviceManager::onDeviceListChanged);
 }
 
 AudioDeviceManager &AudioDeviceManager::instance()
@@ -76,4 +78,35 @@ void AudioDeviceManager::saveDevice(const QString &key, const QAudioDevice &devi
 QAudioDevice AudioDeviceManager::fallbackDevice(bool isInput) const
 {
     return isInput ? QMediaDevices::defaultAudioInput() : QMediaDevices::defaultAudioOutput();
+}
+
+void AudioDeviceManager::onDeviceListChanged()
+{
+    // Check if current input device is still available
+    QAudioDevice currentIn = currentInputDevice();
+    bool inputFound = false;
+    for (const QAudioDevice &dev : QMediaDevices::audioInputs()) {
+        if (dev.id() == currentIn.id()) {
+            inputFound = true;
+            break;
+        }
+    }
+    if (!inputFound) {
+        qInfo() << "Input device disappeared, switching to default";
+        setInputDevice(fallbackDevice(true));
+    }
+
+    // Check if current output device is still available
+    QAudioDevice currentOut = currentOutputDevice();
+    bool outputFound = false;
+    for (const QAudioDevice &dev : QMediaDevices::audioOutputs()) {
+        if (dev.id() == currentOut.id()) {
+            outputFound = true;
+            break;
+        }
+    }
+    if (!outputFound) {
+        qInfo() << "Output device disappeared, switching to default";
+        setOutputDevice(fallbackDevice(false));
+    }
 }

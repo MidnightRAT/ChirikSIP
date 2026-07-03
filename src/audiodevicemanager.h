@@ -27,6 +27,9 @@ signals:
     void outputDeviceChanged(const QAudioDevice &device);
     void deviceListChanged();
 
+private slots:
+    void onDeviceListChanged();
+
 private:
     explicit AudioDeviceManager(QObject *parent = nullptr);
     QAudioDevice loadDevice(const QString &key, bool isInput) const;
