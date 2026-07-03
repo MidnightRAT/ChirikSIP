@@ -39,6 +39,13 @@ jobs:
           chmod +x build-deb.sh
           ./build-deb.sh "${{ matrix.ubuntu }}"
 
+      - name: Rename DEB to include Ubuntu version
+        run: |
+          cd build/debs
+          for f in chiriksip_*.deb; do
+            mv "$f" "$(echo "$f" | sed 's/chiriksip_/chiriksip_ubuntu${{ matrix.ubuntu }}-/')"
+          done
+
       - name: Upload DEB artifacts
         uses: actions/upload-artifact@v4
         with:
