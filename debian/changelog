@@ -1,3 +1,12 @@
+chiriksip (1.0.3-1) unstable; urgency=medium
+
+  * Bilingual README and CHANGELOG (English + Ukrainian)
+  * Added Latest Release badge and Donate badge (WayForPay)
+  * Added paths-ignore for CHANGELOG.md and README.md in CI workflows
+  * Flatpak bundle now includes version in filename
+
+ -- Chirik <chirikrat@gmail.com>  Tue, 08 Jul 2026 12:00:00 +0300
+
 chiriksip (1.0.2-1) unstable; urgency=medium
 
   * CI/CD: RPM workflow builds for Fedora 43 and 44 (was 44 only)
