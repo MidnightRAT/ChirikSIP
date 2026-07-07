@@ -9,6 +9,10 @@
 
 ---
 
+### Donate
+
+[![Donate via WayForPay](https://img.shields.io/badge/Donate-WayForPay-blue?style=for-the-badge)](https://secure.wayforpay.com/donate/d29145e2b8e3c)
+
 ## English
 
 Minimalist SIP client for KDE Plasma, built on Qt6 and PJSIP.
@@ -16,10 +20,6 @@ Minimalist SIP client for KDE Plasma, built on Qt6 and PJSIP.
 ![Linux Main Window](screenshots/Linux_dark_main.png)
 
 More screenshots in [screenshots/README.md](screenshots/README.md)
-
-### Donate
-
-[![Donate via WayForPay](https://img.shields.io/badge/Donate-WayForPay-blue?style=for-the-badge)](https://secure.wayforpay.com/donate/d29145e2b8e3c)
 
 ### Features
 
@@ -257,6 +257,10 @@ MIT
 
 ---
 
+### Donate
+
+[![Donate via WayForPay](https://img.shields.io/badge/Donate-WayForPay-blue?style=for-the-badge)](https://secure.wayforpay.com/donate/d29145e2b8e3c)
+
 ## Українська
 
 Мінімалістичний SIP-клієнт для KDE Plasma, побудований на Qt6 та PJSIP.
@@ -264,10 +268,6 @@ MIT
 ![Linux Main Window](screenshots/Linux_dark_main.png)
 
 Детальніші скріншоти див. у [screenshots/README.md](screenshots/README.md)
-
-### Donate
-
-[![Donate via WayForPay](https://img.shields.io/badge/Donate-WayForPay-blue?style=for-the-badge)](https://secure.wayforpay.com/donate/d29145e2b8e3c)
 
 ### Можливості
 
