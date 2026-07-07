@@ -33,11 +33,18 @@ jobs:
           bundle: chiriksip.flatpak
           cache-key: flatpak-builder-${{ github.sha }}
 
+      - name: Get version
+        id: version
+        run: echo "version=$(grep '^Version:' packaging/chiriksip.spec | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+      - name: Rename Flatpak bundle
+        run: mv chiriksip.flatpak chiriksip-${{ steps.version.outputs.version }}.flatpak
+
       - name: Upload Flatpak artifact
         uses: actions/upload-artifact@v4
         with:
           name: chiriksip-flatpak
-          path: chiriksip.flatpak
+          path: chiriksip-*.flatpak
 
   publish-flatpak:
     needs: build-flatpak

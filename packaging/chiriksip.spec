@@ -1,7 +1,7 @@
 %define debug_package %{nil}
 
 Name:           chiriksip
-Version:        1.0.2
+Version:        1.0.3
 Release:        1%{?dist}
 Summary:        A simple SIP client for KDE Plasma
 
