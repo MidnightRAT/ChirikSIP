@@ -6,16 +6,14 @@ permissions:
 on:
   push:
     branches: [main]
-    paths:
-      - 'src/**'
-      - 'packaging/**'
-      - 'CMakeLists.txt'
-      - 'resources/**'
-      - 'Containerfile.rpmbuild'
-      - 'build-rpm.sh'
-      - '.github/workflows/build-rpm.yml'
+    paths-ignore:
+      - 'CHANGELOG.md'
+      - 'README.md'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - 'CHANGELOG.md'
+      - 'README.md'
   workflow_dispatch:
 
 jobs:

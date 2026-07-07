@@ -11,3 +11,4 @@ CMakeUserPresets.json
 repo/
 .flatpak-builder/
 builddir/
+AGENTS.md
