@@ -102,8 +102,8 @@ for FEDORA_VERSION in $VERSIONS; do
 
             # Create source tarball
             cd /src
-            tar czf ~/rpmbuild/SOURCES/chiriksip-${FULL_VERSION}.tar.gz \
-                --transform 's,^,chiriksip-${FULL_VERSION}/,' \
+            tar czf ~/rpmbuild/SOURCES/chiriksip-${SPEC_VERSION}.tar.gz \
+                --transform 's,^,chiriksip-${SPEC_VERSION}/,' \
                 -X .rpmignore .
 
             # Copy spec file
