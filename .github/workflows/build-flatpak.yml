@@ -37,7 +37,10 @@ jobs:
 
       - name: Get version
         id: version
-        run: echo "version=$(grep '^Version:' packaging/chiriksip.spec | awk '{print $2}')" >> $GITHUB_OUTPUT
+        run: |
+          VERSION=$(grep '^Version:' packaging/chiriksip.spec | awk '{print $2}')
+          RELEASE=$(grep '^Release:' packaging/chiriksip.spec | awk '{print $2}' | sed 's/%{?dist}//')
+          echo "version=${VERSION}-${RELEASE}" >> $GITHUB_OUTPUT
 
       - name: Rename Flatpak bundle
         run: mv chiriksip.flatpak chiriksip-${{ steps.version.outputs.version }}.flatpak
@@ -64,7 +67,10 @@ jobs:
 
       - name: Get version
         id: version
-        run: echo "version=$(grep '^Version:' packaging/chiriksip.spec | awk '{print $2}')" >> $GITHUB_OUTPUT
+        run: |
+          VERSION=$(grep '^Version:' packaging/chiriksip.spec | awk '{print $2}')
+          RELEASE=$(grep '^Release:' packaging/chiriksip.spec | awk '{print $2}' | sed 's/%{?dist}//')
+          echo "version=${VERSION}-${RELEASE}" >> $GITHUB_OUTPUT
 
       - name: Publish to release
         uses: softprops/action-gh-release@v2

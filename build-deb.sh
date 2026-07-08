@@ -54,8 +54,10 @@ mkdir -p "$ARTIFACTS_DIR"
 
 # Extract version from spec file
 SPEC_VERSION=$(grep '^Version:' "$SCRIPT_DIR/packaging/chiriksip.spec" | awk '{print $2}')
+SPEC_RELEASE=$(grep '^Release:' "$SCRIPT_DIR/packaging/chiriksip.spec" | awk '{print $2}' | sed 's/%{?dist}//')
+FULL_VERSION="${SPEC_VERSION}-${SPEC_RELEASE}"
 echo "=== ChirikSIP DEB Build ==="
-echo "Package version: $SPEC_VERSION"
+echo "Package version: $FULL_VERSION"
 echo "Ubuntu versions: $VERSIONS"
 echo "Runtime: $CONTAINER_RUNTIME"
 echo ""
@@ -91,9 +93,9 @@ for UBUNTU_VERSION in $VERSIONS; do
             set -e
 
             # Create build directory
-            mkdir -p /build/chiriksip-${SPEC_VERSION}
-            cp -a /src/. /build/chiriksip-${SPEC_VERSION}/
-            cd /build/chiriksip-${SPEC_VERSION}
+            mkdir -p /build/chiriksip-${FULL_VERSION}
+            cp -a /src/. /build/chiriksip-${FULL_VERSION}/
+            cd /build/chiriksip-${FULL_VERSION}
 
             # Build package
             dpkg-buildpackage -us -uc -b

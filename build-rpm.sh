@@ -57,8 +57,10 @@ mkdir -p "$ARTIFACTS_DIR"
 
 # Extract version from spec file
 SPEC_VERSION=$(grep '^Version:' "$SCRIPT_DIR/packaging/chiriksip.spec" | awk '{print $2}')
+SPEC_RELEASE=$(grep '^Release:' "$SCRIPT_DIR/packaging/chiriksip.spec" | awk '{print $2}' | sed 's/%{?dist}//')
+FULL_VERSION="${SPEC_VERSION}-${SPEC_RELEASE}"
 echo "=== ChirikSIP RPM Build ==="
-echo "Package version: $SPEC_VERSION"
+echo "Package version: $FULL_VERSION"
 echo "Fedora versions: $VERSIONS"
 echo "Runtime: $CONTAINER_RUNTIME"
 echo "RPM Fusion: $INSTALL_RPMFUSION"
@@ -100,8 +102,8 @@ for FEDORA_VERSION in $VERSIONS; do
 
             # Create source tarball
             cd /src
-            tar czf ~/rpmbuild/SOURCES/chiriksip-${SPEC_VERSION}.tar.gz \
-                --transform 's,^,chiriksip-${SPEC_VERSION}/,' \
+            tar czf ~/rpmbuild/SOURCES/chiriksip-${FULL_VERSION}.tar.gz \
+                --transform 's,^,chiriksip-${FULL_VERSION}/,' \
                 -X .rpmignore .
 
             # Copy spec file

@@ -6,6 +6,13 @@
 
 ## English
 
+### 1.0.3-2 (2026-07-08)
+
+#### Versioning
+- Synchronized version numbers across CMakeLists.txt, RPM spec, DEB changelog, and metainfo.xml
+- About dialog now shows full version with release number (e.g. 1.0.3-2)
+- CI workflows extract and publish versioned tags (e.g. v1.0.3-2)
+
 ### 1.0.3 (2026-07-08)
 
 #### Documentation
@@ -233,6 +240,13 @@
 ---
 
 ## Українська
+
+### 1.0.3-2 (2026-07-08)
+
+#### Версіонування
+- Синхронізовано номери версій у CMakeLists.txt, RPM spec, DEB changelog та metainfo.xml
+- Діалог About тепер показує повну версію з номером релізу (напр. 1.0.3-2)
+- CI workflow витягують та публікують теги з версією (напр. v1.0.3-2)
 
 ### 1.0.3 (2026-07-08)
 

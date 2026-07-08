@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
-project(ChirikSIP VERSION 1.0.1 LANGUAGES CXX)
+project(ChirikSIP VERSION 1.0.3 LANGUAGES CXX)
+
+set(PROJECT_RELEASE "2" CACHE STRING "Package release number")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -33,7 +35,10 @@ target_link_libraries(chiriksip PRIVATE
 target_include_directories(chiriksip PRIVATE ${PORTAUDIO_INCLUDE_DIRS})
 target_compile_options(chiriksip PRIVATE ${PJSIP_CFLAGS_OTHER} ${PORTAUDIO_CFLAGS_OTHER})
 
-target_compile_definitions(chiriksip PRIVATE PROJECT_VERSION="${PROJECT_VERSION}")
+target_compile_definitions(chiriksip PRIVATE
+    PROJECT_VERSION="${PROJECT_VERSION}"
+    PROJECT_RELEASE="${PROJECT_RELEASE}"
+)
 
 # Debug sanitizers (optional — requires libasan/libubsan)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -79,5 +84,8 @@ target_link_libraries(test_parsing PRIVATE
     ${PORTAUDIO_LIBRARIES}
 )
 target_include_directories(test_parsing PRIVATE ${PORTAUDIO_INCLUDE_DIRS} src)
-target_compile_definitions(test_parsing PRIVATE PROJECT_VERSION="${PROJECT_VERSION}")
+target_compile_definitions(test_parsing PRIVATE
+    PROJECT_VERSION="${PROJECT_VERSION}"
+    PROJECT_RELEASE="${PROJECT_RELEASE}"
+)
 add_test(NAME test_parsing COMMAND test_parsing)

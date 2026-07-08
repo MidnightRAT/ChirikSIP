@@ -30,7 +30,7 @@
     <keyword>phone</keyword>
   </keywords>
   <releases>
-    <release version="1.0.0" date="2026-07-01">
+    <release version="1.0.3" date="2026-07-08">
       <description>
         <p>Initial release with SIP registration and call support.</p>
       </description>

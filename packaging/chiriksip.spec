@@ -2,7 +2,7 @@
 
 Name:           chiriksip
 Version:        1.0.3
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A simple SIP client for KDE Plasma
 
 License:        MIT

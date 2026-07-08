@@ -754,7 +754,7 @@ void MainWindow::onAbout()
 {
     QMessageBox::about(this, "About ChirikSIP",
         "<h2>ChirikSIP</h2>"
-        "<p>Version " + QApplication::applicationVersion() + "</p>"
+        "<p>Version " + QApplication::applicationVersion() + "-" PROJECT_RELEASE "</p>"
         "<p>Build: " __DATE__ " " __TIME__ "</p>"
         "<p>A simple SIP client for KDE Plasma.</p>"
         "<p>Built with Qt6 and PJSIP.</p>"
