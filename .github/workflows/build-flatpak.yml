@@ -9,11 +9,13 @@ on:
     paths-ignore:
       - 'CHANGELOG.md'
       - 'README.md'
+      - '.github/FUNDING.yml'
   pull_request:
     branches: [main]
     paths-ignore:
       - 'CHANGELOG.md'
       - 'README.md'
+      - '.github/FUNDING.yml'
   workflow_dispatch:
 
 jobs:
